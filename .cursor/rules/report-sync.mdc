@@ -1,0 +1,31 @@
+---
+description: Keep REPORT.md in sync when inference or env config changes
+globs: scripts/start_vllm.sh,report.md,REPORT.md,.env,.env.example,docker-compose.yml,infra/**
+alwaysApply: false
+---
+
+# REPORT.md must stay in sync with config
+
+When you change any serving or observability configuration, update `report.md` in the same turn.
+
+## Trigger files
+- `scripts/start_vllm.sh` — vLLM CLI flags
+- `.env` / `.env.example` — `VLLM_MODEL`, `VLLM_BASE_URL`, Langfuse keys
+- `docker-compose.yml`, `infra/**` — o11y stack changes
+- `agent/graph.py`, `agent/prompts.py` — agent LLM behavior (Phase 3+)
+
+## What to update in report.md
+
+For each changed flag/setting, add or edit a row in the Phase table:
+
+| Flag | Value | Justification |
+
+One-line justification per flag: why it fits the workload (1.5–3K prompts, short SQL, 2–3 LLM calls/request) and SLO (P95 <5s, 10+ RPS).
+
+## Agent behavior (required)
+- After editing a trigger file, propose or apply matching `report.md` updates before finishing.
+- If the user changes config manually, remind them to update `report.md` and offer to do it.
+- Do not leave `start_vllm.sh` and `report.md` out of sync.
+
+## Local dev vs H100
+If config is for local smoke tests (e.g. Qwen3-0.6B, `--gpu-memory-utilization 0.8`), label it clearly as **local dev** vs **H100 production** in `report.md`.
