@@ -14,6 +14,7 @@ from typing import Any
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from langchain_core.runnables import RunnableConfig
 
 load_dotenv()
 
@@ -27,6 +28,7 @@ if os.environ.get("LANGFUSE_PUBLIC_KEY") and os.environ.get("LANGFUSE_SECRET_KEY
     from langfuse.langchain import CallbackHandler
 
     _lf_handler = CallbackHandler()
+    print("Langfuse callback handler initialized")
 
 
 app = FastAPI()
@@ -55,11 +57,12 @@ def health() -> dict[str, str]:
 @app.post("/answer", response_model=AnswerResponse)
 def answer(req: AnswerRequest) -> AnswerResponse:
     state = AgentState(question=req.question, db_id=req.db)
-    config: dict[str, Any] = {
+    config: RunnableConfig  = {
         "callbacks": [_lf_handler] if _lf_handler is not None else [],
         "metadata": req.tags,
     }
     try:
+        print(config["callbacks"])
         final = graph.invoke(state, config=config)
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}")
