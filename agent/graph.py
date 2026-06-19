@@ -16,6 +16,7 @@ conditional router following the same shape.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 from dataclasses import dataclass, field
@@ -81,6 +82,26 @@ def _extract_sql(text: str) -> str:
     return (fenced.group(1) if fenced else text).strip()
 
 
+def _parse_verify_response(text: str) -> tuple[bool, str]:
+    """Parse {"ok": bool, "issue": str} from an LLM reply, tolerating fences/prose."""
+    stripped = text.strip()
+    try:
+        data = json.loads(stripped)
+    except json.JSONDecodeError:
+        start = stripped.find("{")
+        end = stripped.rfind("}")
+        if start == -1 or end <= start:
+            return False, f"Verifier returned unparseable output: {stripped[:200]}"
+        try:
+            data = json.loads(stripped[start : end + 1])
+        except json.JSONDecodeError:
+            return False, f"Verifier returned unparseable output: {stripped[:200]}"
+
+    ok = bool(data.get("ok", False))
+    issue = str(data.get("issue", "") or "")
+    return ok, issue
+
+
 def generate_sql_node(state: AgentState) -> dict:
     """Worked example - the other LLM nodes follow this same shape.
 
@@ -124,7 +145,27 @@ def verify_node(state: AgentState) -> dict:
     What counts as "not plausible" is yours to define - see the Phase 3 targets
     in the README.
     """
-    raise NotImplementedError("Implement in Phase 3")
+    execution = state.execution
+    execution_text = execution.render() if execution is not None else "ERROR: no execution result"
+
+    response = llm().invoke([
+        ("system", prompts.VERIFY_SYSTEM),
+        ("user", prompts.VERIFY_USER.format(
+            question=state.question,
+            sql=state.sql,
+            execution=execution_text,
+        )),
+    ])
+    verify_ok, verify_issue = _parse_verify_response(response.content)
+    return {
+        "verify_ok": verify_ok,
+        "verify_issue": verify_issue,
+        "history": state.history + [{
+            "node": "verify",
+            "ok": verify_ok,
+            "issue": verify_issue,
+        }],
+    }
 
 
 def revise_node(state: AgentState) -> dict:
@@ -137,7 +178,25 @@ def revise_node(state: AgentState) -> dict:
 
     Return: {"sql": <str>, "iteration": state.iteration + 1, ...}.
     """
-    raise NotImplementedError("Implement in Phase 3")
+    execution = state.execution
+    execution_text = execution.render() if execution is not None else "ERROR: no execution result"
+
+    response = llm().invoke([
+        ("system", prompts.REVISE_SYSTEM),
+        ("user", prompts.REVISE_USER.format(
+            schema=state.schema,
+            question=state.question,
+            sql=state.sql,
+            execution=execution_text,
+            issue=state.verify_issue,
+        )),
+    ])
+    sql = _extract_sql(response.content)
+    return {
+        "sql": sql,
+        "iteration": state.iteration + 1,
+        "history": state.history + [{"node": "revise", "sql": sql, "issue": state.verify_issue}],
+    }
 
 
 def route_after_verify(state: AgentState) -> str:
@@ -146,7 +205,9 @@ def route_after_verify(state: AgentState) -> str:
     Two reasons to end: the verifier was happy (state.verify_ok), or you've hit
     the iteration cap (state.iteration >= MAX_ITERATIONS). Otherwise, revise.
     """
-    raise NotImplementedError("Implement in Phase 3")
+    if state.verify_ok or state.iteration >= MAX_ITERATIONS:
+        return "end"
+    return "revise"
 
 
 # ---- Graph wiring -----------------------------------------------------

@@ -23,3 +23,12 @@ Three row groups, metrics scraped from vLLM `/metrics` via Prometheus:
 | **KV cache** | usage %, prefix hit rate, preemptions/s | `kv_cache_usage_perc`, `prefix_cache_hits_total` / `prefix_cache_queries_total`, `num_preemptions_total` |
 
 Read order under load: queue growing → KV usage near 100% → preemptions → which lifecycle phase P95 moved (queue vs prefill vs decode).
+
+## Phase 3 — Agent graph
+
+| Setting | Value | Justification |
+|---------|-------|---------------|
+| MAX_ITERATIONS | 3 | Caps generate + revise LLM calls; README allows 3–5 |
+| verify → revise loop | conditional edge | Re-executes after failed verification |
+| verify targets | SQL error, 0 rows, wrong columns | Obvious failure modes routed to revise |
+| thinking | disabled at vLLM server | Agent needs short SQL/JSON, not reasoning tokens |

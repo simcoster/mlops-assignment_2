@@ -5,7 +5,15 @@
 
 set -euo pipefail
 
-MODEL="${VLLM_MODEL:-Qwen/Qwen3-30B-A3B}"
+# load .env file
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ -f "$ROOT/.env" ]]; then
+  set -a
+  source "$ROOT/.env"
+  set +a
+fi
+
+MODEL="${VLLM_MODEL}"
 
 exec uv run python -m vllm.entrypoints.openai.api_server \
     --model "$MODEL" \

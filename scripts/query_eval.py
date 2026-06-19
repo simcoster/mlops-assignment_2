@@ -38,7 +38,7 @@ Question: {question}
 """
 
 VLLM_BASE_URL = "http://localhost:8000/v1"
-VLLM_MODEL = "Qwen/Qwen3-30B-A3B"
+VLLM_MODEL = "Qwen/Qwen3-30B-A3B-Instruct-2507"
 
 
 def load_questions(path: Path = EVAL_FILE) -> list[dict]:
