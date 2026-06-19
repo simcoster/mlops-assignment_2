@@ -65,6 +65,16 @@ def llm() -> ChatOpenAI:
     )
 
 
+def llm_revise() -> ChatOpenAI:
+    """Slightly higher temperature so revisions explore fixes instead of repeating."""
+    return ChatOpenAI(
+        model=VLLM_MODEL,
+        base_url=VLLM_BASE_URL,
+        api_key=LLM_API_KEY,
+        temperature=0.2,
+    )
+
+
 # ---- Nodes ------------------------------------------------------------
 
 def _attach_schema(state: AgentState) -> dict:
@@ -80,6 +90,11 @@ def _extract_sql(text: str) -> str:
     """
     fenced = re.search(r"```(?:sql)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
     return (fenced.group(1) if fenced else text).strip()
+
+
+def _normalize_sql(sql: str) -> str:
+    """Collapse whitespace for same-query detection."""
+    return re.sub(r"\s+", " ", sql.strip().rstrip(";")).lower()
 
 
 def _parse_verify_response(text: str) -> tuple[bool, str]:
@@ -180,22 +195,41 @@ def revise_node(state: AgentState) -> dict:
     """
     execution = state.execution
     execution_text = execution.render() if execution is not None else "ERROR: no execution result"
+    prior_sql = state.sql
 
-    response = llm().invoke([
+    messages: list[tuple[str, str]] = [
         ("system", prompts.REVISE_SYSTEM),
         ("user", prompts.REVISE_USER.format(
             schema=state.schema,
             question=state.question,
-            sql=state.sql,
+            sql=prior_sql,
             execution=execution_text,
             issue=state.verify_issue,
         )),
-    ])
+    ]
+
+    model = llm_revise()
+    response = model.invoke(messages)
     sql = _extract_sql(response.content)
+
+    if _normalize_sql(sql) == _normalize_sql(prior_sql):
+        messages.append(("assistant", response.content))
+        messages.append(("user", prompts.REVISE_RETRY_USER.format(
+            issue=state.verify_issue,
+            sql=prior_sql,
+        )))
+        response = model.invoke(messages)
+        sql = _extract_sql(response.content)
+
     return {
         "sql": sql,
         "iteration": state.iteration + 1,
-        "history": state.history + [{"node": "revise", "sql": sql, "issue": state.verify_issue}],
+        "history": state.history + [{
+            "node": "revise",
+            "sql": sql,
+            "issue": state.verify_issue,
+            "unchanged": _normalize_sql(sql) == _normalize_sql(prior_sql),
+        }],
     }
 
 

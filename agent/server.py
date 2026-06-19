@@ -62,7 +62,6 @@ def answer(req: AnswerRequest) -> AnswerResponse:
         "metadata": req.tags,
     }
     try:
-        print(config["callbacks"])
         final = graph.invoke(state, config=config)
     except Exception as e:  # noqa: BLE001
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}")

@@ -31,4 +31,5 @@ Read order under load: queue growing → KV usage near 100% → preemptions → 
 | MAX_ITERATIONS | 3 | Caps generate + revise LLM calls; README allows 3–5 |
 | verify → revise loop | conditional edge | Re-executes after failed verification |
 | verify targets | SQL error, 0 rows, wrong columns | Obvious failure modes routed to revise |
+| revise | temp 0.2 + unchanged-SQL retry | Avoid repeating the same failing query at temp 0 |
 | thinking | disabled at vLLM server | Agent needs short SQL/JSON, not reasoning tokens |
