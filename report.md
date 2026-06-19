@@ -1,10 +1,12 @@
 ## Phase 1 — vLLM serving config
-Model: Qwen/Qwen3-30B-A3B-Instruct-2507
+Model: Qwen/Qwen3-30B-A3B-Instruct-2507 (from `VLLM_MODEL` in `.env`, read by `scripts/start_vllm.sh`)
 Hardware: 1× H100 80GB
+
 | Flag | Value | Justification |
 |------|-------|---------------|
-| --gpu-memory-utilization | 0.9 | Leave headroom for KV cache while maximizing concurrent agent runs |
-| --max-model-len | 8192 | Prompts ~2K tokens; shorter max frees KV for more seqs |
+| VLLM_MODEL | Qwen/Qwen3-30B-A3B-Instruct-2507 | Assignment target model; must match agent/eval requests |
+| --gpu-memory-utilization | 0.9 | Weights use ~57 GiB; higher util leaves enough KV cache headroom on H100 |
+| --max-model-len | 8192 | Default 40960 OOMs on KV cache; prompts ~2K tokens so 8K is sufficient |
 | --max-num-seqs | 64 | Tuned for 10+ RPS with ~2-3 calls/request |
 | --enable-prefix-caching | true | Schema prefix reused across generate/verify/revise |
 | --reasoning-parser | qwen3 | Qwen3 family |

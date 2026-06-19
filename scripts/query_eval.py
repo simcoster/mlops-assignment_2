@@ -38,7 +38,7 @@ Question: {question}
 """
 
 VLLM_BASE_URL = "http://localhost:8000/v1"
-VLLM_MODEL = "Qwen/Qwen3-0.6B"
+VLLM_MODEL = "Qwen/Qwen3-30B-A3B"
 
 
 def load_questions(path: Path = EVAL_FILE) -> list[dict]:
@@ -78,9 +78,11 @@ def query_vllm(
                 },
             ],
             "temperature": 0.0,
-            "default_chat_template_kwargs": {"enable_thinking": False}
+            "max_tokens": 512,
+            "chat_template_kwargs": {"enable_thinking": False}
         },
         timeout=timeout,
+
     )
     response.raise_for_status()
     return response.json()["choices"][0]["message"]["content"]

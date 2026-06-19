@@ -5,11 +5,14 @@
 
 set -euo pipefail
 
-MODEL="Qwen/Qwen3-0.6B"
+MODEL="${VLLM_MODEL:-Qwen/Qwen3-30B-A3B}"
 
 exec uv run python -m vllm.entrypoints.openai.api_server \
     --model "$MODEL" \
     --host 0.0.0.0 \
     --port 8000 \
-    --gpu-memory-utilization 0.8 \
+    --gpu-memory-utilization 0.9 \
+    --max-model-len 8192 \
+    --max-num-seqs 64 \
+    --enable-prefix-caching \
     --reasoning-parser qwen3

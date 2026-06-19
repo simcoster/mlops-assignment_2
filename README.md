@@ -129,7 +129,7 @@ The model is fixed: `Qwen/Qwen3-30B-A3B-Instruct-2507`. The hardware is fixed: 1
 
 We are not enumerating which parameters to consider on purpose. Knowing which levers to reach for, given a workload profile (1.5-3K-token prompts, short structured outputs, ~2-3 dependent calls per user request) and a latency target, is the apply-the-lectures part of the assignment. Heads-up: you'll need to iterate.   
 
-There's an example launch script at `scripts/start_vllm.sh` to get you started - feel free to modify it or roll your own. The [vLLM docs](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html) are your reference for the available flags.
+There's an example launch script at `scripts/start_vllm.sh` to get you started — it reads `VLLM_MODEL` from `.env` and ships with H100-oriented defaults (`--max-model-len 8192`, `--gpu-memory-utilization 0.9`, prefix caching, thinking disabled). Feel free to modify it or roll your own. The [vLLM docs](https://docs.vllm.ai/en/latest/serving/openai_compatible_server.html) are your reference for the available flags.
 
 ### What to do:
 1.  Start vLLM with your initial configuration.
