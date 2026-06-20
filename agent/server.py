@@ -8,6 +8,7 @@ agent's final SQL, the result rows, and per-iteration history.
 """
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any
 
@@ -19,6 +20,8 @@ from langchain_core.runnables import RunnableConfig
 load_dotenv()
 
 from agent.graph import AgentState, graph  # noqa: E402
+
+logger = logging.getLogger(__name__)
 
 # Langfuse callback handler. If keys are set we initialize it; failures
 # are NOT swallowed - a misconfigured Langfuse should not silently
@@ -64,6 +67,12 @@ def answer(req: AnswerRequest) -> AnswerResponse:
     try:
         final = graph.invoke(state, config=config)
     except Exception as e:  # noqa: BLE001
+        logger.exception(
+            "Agent graph failed db=%s question=%r tags=%s",
+            req.db,
+            req.question[:120],
+            req.tags,
+        )
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}")
 
     sql = final.get("sql", "")
