@@ -65,15 +65,6 @@ def llm() -> ChatOpenAI:
     )
 
 
-def llm_revise() -> ChatOpenAI:
-    """Slightly higher temperature so revisions explore fixes instead of repeating."""
-    return ChatOpenAI(
-        model=VLLM_MODEL,
-        base_url=VLLM_BASE_URL,
-        api_key=LLM_API_KEY,
-        temperature=0.2,
-    )
-
 
 # ---- Nodes ------------------------------------------------------------
 
@@ -95,6 +86,39 @@ def _extract_sql(text: str) -> str:
 def _normalize_sql(sql: str) -> str:
     """Collapse whitespace for same-query detection."""
     return re.sub(r"\s+", " ", sql.strip().rstrip(";")).lower()
+
+
+def _format_revision_history(history: list[dict[str, Any]]) -> str:
+    """Build a prompt section listing every failed SQL attempt and verifier feedback."""
+    blocks: list[str] = []
+    last_sql = ""
+    attempt = 0
+
+    for entry in history:
+        node = entry.get("node")
+        if node in ("generate_sql", "revise"):
+            last_sql = str(entry.get("sql", ""))
+        elif node == "verify" and not entry.get("ok", True):
+            attempt += 1
+            issue = str(entry.get("issue", "") or "(no issue provided)")
+            blocks.append(
+                f"Attempt {attempt}:\n"
+                f"SQL:\n{last_sql}\n\n"
+                f"Verifier issue:\n{issue}"
+            )
+
+    if not blocks:
+        return "No prior failed attempts."
+    return "\n\n".join(blocks)
+
+
+def _prior_sql_attempts(history: list[dict[str, Any]]) -> list[str]:
+    """Return every SQL query tried so far (generate + revise)."""
+    return [
+        str(entry["sql"])
+        for entry in history
+        if entry.get("node") in ("generate_sql", "revise") and entry.get("sql")
+    ]
 
 
 def _parse_verify_response(text: str) -> tuple[bool, str]:
@@ -195,28 +219,32 @@ def revise_node(state: AgentState) -> dict:
     """
     execution = state.execution
     execution_text = execution.render() if execution is not None else "ERROR: no execution result"
-    prior_sql = state.sql
+    revision_history = _format_revision_history(state.history)
+    prior_sqls = _prior_sql_attempts(state.history)
 
     messages: list[tuple[str, str]] = [
         ("system", prompts.REVISE_SYSTEM),
         ("user", prompts.REVISE_USER.format(
             schema=state.schema,
             question=state.question,
-            sql=prior_sql,
+            revision_history=revision_history,
             execution=execution_text,
-            issue=state.verify_issue,
         )),
     ]
 
-    model = llm_revise()
+    model = llm()
     response = model.invoke(messages)
     sql = _extract_sql(response.content)
 
-    if _normalize_sql(sql) == _normalize_sql(prior_sql):
+    def _repeats_prior_attempt(candidate: str) -> bool:
+        norm = _normalize_sql(candidate)
+        return any(norm == _normalize_sql(prior) for prior in prior_sqls)
+
+    if _repeats_prior_attempt(sql):
         messages.append(("assistant", response.content))
         messages.append(("user", prompts.REVISE_RETRY_USER.format(
-            issue=state.verify_issue,
-            sql=prior_sql,
+            revision_history=revision_history,
+            sql=sql,
         )))
         response = model.invoke(messages)
         sql = _extract_sql(response.content)
@@ -228,7 +256,7 @@ def revise_node(state: AgentState) -> dict:
             "node": "revise",
             "sql": sql,
             "issue": state.verify_issue,
-            "unchanged": _normalize_sql(sql) == _normalize_sql(prior_sql),
+            "unchanged": _repeats_prior_attempt(sql),
         }],
     }
 

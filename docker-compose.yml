@@ -159,8 +159,6 @@ services:
       <<: *langfuse-env
       NEXTAUTH_URL: http://localhost:3001
       NEXTAUTH_SECRET: course-nextauth-not-for-prod
-      LANGFUSE_INIT_ORG_NAME: Course
-      LANGFUSE_INIT_PROJECT_NAME: Default
 
 volumes:
   prometheus-data:

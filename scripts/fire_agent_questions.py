@@ -119,7 +119,7 @@ def main() -> None:
                     db_id=item["db_id"],
                     tags=tags,
                 )
-            except httpx.HTTPError as exc:
+            except httpx.HTTPStatusError as exc:
                 elapsed = time.perf_counter() - started
                 total_elapsed += elapsed
                 print(f"  FAIL ({elapsed:.1f}s): {exc}")
