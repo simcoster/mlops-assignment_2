@@ -28,8 +28,24 @@ Read order under load: queue growing → KV usage near 100% → preemptions → 
 
 | Setting | Value | Justification |
 |---------|-------|---------------|
-| MAX_ITERATIONS | 3 | Caps generate + revise LLM calls; README allows 3–5 |
+| MAX_ITERATIONS | 2 (iteration 1 target) | `eval_baseline.json` shows identical pass rate for `iter_1` and `iter_2` (0.3333), so the 3rd loop adds latency risk without observed quality gain |
 | verify → revise loop | conditional edge | Re-executes after failed verification |
 | verify targets | SQL error, 0 rows, wrong columns | Obvious failure modes routed to revise |
 | revise | temp 0.2 + unchanged-SQL retry | Avoid repeating the same failing query at temp 0 |
 | thinking | disabled at vLLM server | Agent needs short SQL/JSON, not reasoning tokens |
+
+## Phase 4 — SLA iteration log
+
+### Baseline stress test (before new tuning)
+
+| Load test run | Requested RPS | Achieved RPS | OK | Timeouts | HTTP errors | Client errors | Latency p50 | Latency p95 | Latency p99 | Notes |
+|---------------|---------------|--------------|----|----------|-------------|---------------|-------------|-------------|-------------|-------|
+| run A | 5 | 4.3069 | 1291 | 5 | 195 | 9 | 2.3417s | 17.9090s | 27.8481s | Mostly stable, but p95 above SLA target |
+| run B | 10 | 8.3332 | 452 | 1697 | 246 | 605 | 22.8806s | 113.1670s | 118.6886s | Severe saturation and timeout spike |
+| run C | 20 | 16.6664 | 298 | 4370 | 116 | 1216 | 28.4747s | 112.6996s | 117.4194s | Intentional overload confirms compute bottleneck |
+
+### Iteration 1 (agent loop reduction)
+
+- Observation: `results/eval_baseline.json` shows `iter_1` and `iter_2` have identical success rate (`0.3333`).
+- Decision: reduce `MAX_ITERATIONS` from 3 to 2 to lower per-request LLM work and reduce timeout risk.
+- Scope: documentation only in this iteration; code/config changes to follow separately.

@@ -1,0 +1,1197 @@
+{
+  "summary": {
+    "total": 30,
+    "overall_pass_rate": 0.3333333333333333,
+    "overall_passed": 10,
+    "per_iteration_pass_rate": {
+      "iter_0": 0.26666666666666666,
+      "iter_1": 0.3333333333333333,
+      "iter_2": 0.3333333333333333
+    },
+    "avg_iterations": 1.4333333333333333
+  },
+  "wall_clock_seconds": 48.771761160000096,
+  "results": [
+    {
+      "question": "What is the coordinates location of the circuits for Australian grand prix?",
+      "db_id": "formula_1",
+      "gold_sql": "SELECT DISTINCT T1.lat, T1.lng FROM circuits AS T1 INNER JOIN races AS T2 ON T2.circuitID = T1.circuitId WHERE T2.name = 'Australian Grand Prix'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT c.lat, c.lng\nFROM circuits c\nJOIN races r ON c.circuitId = r.circuitId\nWHERE r.name = 'Australian Grand Prix';",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT c.lat, c.lng\nFROM circuits c\nJOIN races r ON c.circuitId = r.circuitId\nWHERE r.name = 'Australian Grand Prix';",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT c.lat, c.lng\nFROM circuits c\nJOIN races r ON c.circuitId = r.circuitId\nWHERE r.name = 'Australian Grand Prix';"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "List down Ajax's superpowers.",
+      "db_id": "superhero",
+      "gold_sql": "SELECT T3.power_name FROM superhero AS T1 INNER JOIN hero_power AS T2 ON T1.id = T2.hero_id INNER JOIN superpower AS T3 ON T2.power_id = T3.id WHERE T1.superhero_name = 'Ajax'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT sp.power_name\nFROM superhero s\nJOIN hero_power hp ON s.id = hp.hero_id\nJOIN superpower sp ON hp.power_id = sp.id\nWHERE s.superhero_name = 'Ajax';",
+      "final_correct": true,
+      "per_iteration": [
+        {
+          "sql": "SELECT sp.power_name\nFROM superhero s\nJOIN hero_power hp ON s.id = hp.hero_id\nJOIN superpower sp ON hp.power_id = sp.id\nWHERE s.superhero_name = 'Ajax';",
+          "correct": true,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT sp.power_name\nFROM superhero s\nJOIN hero_power hp ON s.id = hp.hero_id\nJOIN superpower sp ON hp.power_id = sp.id\nWHERE s.superhero_name = 'Ajax';"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "List the top five schools, by descending order, from the highest to the lowest, the most number of Enrollment (Ages 5-17). Please give their NCES school identification number.",
+      "db_id": "california_schools",
+      "gold_sql": "SELECT T1.NCESSchool FROM schools AS T1 INNER JOIN frpm AS T2 ON T1.CDSCode = T2.CDSCode ORDER BY T2.`Enrollment (Ages 5-17)` DESC LIMIT 5",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT s.\"NCESSchool\"\nFROM \"schools\" s\nJOIN \"frpm\" f ON s.\"CDSCode\" = f.\"CDSCode\"\nORDER BY f.\"Enrollment (Ages 5-17)\" DESC\nLIMIT 5;",
+      "final_correct": true,
+      "per_iteration": [
+        {
+          "sql": "SELECT s.\"NCESSchool\"\nFROM \"schools\" s\nJOIN \"frpm\" f ON s.\"CDSCode\" = f.\"CDSCode\"\nORDER BY f.\"Enrollment (Ages 5-17)\" DESC\nLIMIT 5;",
+          "correct": true,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT s.\"NCESSchool\"\nFROM \"schools\" s\nJOIN \"frpm\" f ON s.\"CDSCode\" = f.\"CDSCode\"\nORDER BY f.\"Enrollment (Ages 5-17)\" DESC\nLIMIT 5;"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "What is the average number of crimes committed in 1995 in regions where the number exceeds 4000 and the region has accounts that are opened starting from the year 1997?",
+      "db_id": "financial",
+      "gold_sql": "SELECT AVG(T1.A15) FROM district AS T1 INNER JOIN account AS T2 ON T1.district_id = T2.district_id WHERE STRFTIME('%Y', T2.date) >= '1997' AND T1.A15 > 4000",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 3,
+      "attempt_count": 3,
+      "final_sql": "SELECT AVG(d.A14) AS average_crimes\nFROM district d\nWHERE d.A14 > 4000\n  AND EXISTS (\n    SELECT 1\n    FROM account a\n    WHERE a.district_id = d.district_id\n      AND CAST(strftime('%Y', a.date) AS INTEGER) >= 1997\n  );",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT AVG(d.A14) AS average_crimes\nFROM district d\nWHERE d.A14 > 4000\n  AND EXISTS (\n    SELECT 1\n    FROM account a\n    WHERE a.district_id = d.district_id\n      AND strftime('%Y', a.date) >= '1997'\n  );",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        },
+        {
+          "sql": "SELECT AVG(d.A14) AS average_crimes\nFROM district d\nWHERE d.A14 > 4000\n  AND EXISTS (\n    SELECT 1\n    FROM account a\n    WHERE a.district_id = d.district_id\n      AND CAST(strftime('%Y', a.date) AS INTEGER) >= 1997\n  )\n  AND d.district_id IN (\n    SELECT DISTINCT a.district_id\n    FROM account a\n    WHERE CAST(strftime('%Y', a.date) AS INTEGER) >= 1997\n  );",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        },
+        {
+          "sql": "SELECT AVG(d.A14) AS average_crimes\nFROM district d\nWHERE d.A14 > 4000\n  AND EXISTS (\n    SELECT 1\n    FROM account a\n    WHERE a.district_id = d.district_id\n      AND CAST(strftime('%Y', a.date) AS INTEGER) >= 1997\n  );",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT AVG(d.A14) AS average_crimes\nFROM district d\nWHERE d.A14 > 4000\n  AND EXISTS (\n    SELECT 1\n    FROM account a\n    WHERE a.district_id = d.district_id\n      AND strftime('%Y', a.date) >= '1997'\n  );"
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The result shows 'None' for the average_crimes, which indicates no valid average was computed. This suggests the query returned zero rows despite the conditions, but the question implies there should be data. The absence of any row in the result means the average cannot be calculated, making the answer invalid."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT AVG(d.A14) AS average_crimes\nFROM district d\nWHERE d.A14 > 4000\n  AND EXISTS (\n    SELECT 1\n    FROM account a\n    WHERE a.district_id = d.district_id\n      AND CAST(strftime('%Y', a.date) AS INTEGER) >= 1997\n  )\n  AND d.district_id IN (\n    SELECT DISTINCT a.district_id\n    FROM account a\n    WHERE CAST(strftime('%Y', a.date) AS INTEGER) >= 1997\n  );",
+          "issue": "The result shows 'None' for the average_crimes, which indicates no valid average was computed. This suggests the query returned zero rows despite the conditions, but the question implies there should be data. The absence of any row in the result means the average cannot be calculated, making the answer invalid.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The query returned no rows (empty result), but the question asks for the average number of crimes, which implies a numerical result should be returned. Since no data satisfies the conditions, the result should be NULL or 0, but the absence of any row means the query did not properly handle the case where no regions meet the criteria."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT AVG(d.A14) AS average_crimes\nFROM district d\nWHERE d.A14 > 4000\n  AND EXISTS (\n    SELECT 1\n    FROM account a\n    WHERE a.district_id = d.district_id\n      AND CAST(strftime('%Y', a.date) AS INTEGER) >= 1997\n  );",
+          "issue": "The query returned no rows (empty result), but the question asks for the average number of crimes, which implies a numerical result should be returned. Since no data satisfies the conditions, the result should be NULL or 0, but the absence of any row means the query did not properly handle the case where no regions meet the criteria.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The query returned no rows, but the question expects an average. Since no data satisfies the conditions (regions with crimes > 4000 and accounts opened from 1997), the result should be NULL or 0, but the execution result shows 'None' for the first rows, indicating no data was returned. This is invalid for an AVG query, which should return a single value (even if NULL)."
+        }
+      ]
+    },
+    {
+      "question": "How many male clients in 'Hl.m. Praha' district?",
+      "db_id": "financial",
+      "gold_sql": "SELECT COUNT(T1.client_id) FROM client AS T1 INNER JOIN district AS T2 ON T1.district_id = T2.district_id WHERE T1.gender = 'M' AND T2.A2 = 'Hl.m. Praha'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT COUNT(*) \nFROM client c\nJOIN district d ON c.district_id = d.district_id\nWHERE c.gender = 'm' AND d.A2 = 'Hl.m. Praha';",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT COUNT(*) \nFROM client c\nJOIN district d ON c.district_id = d.district_id\nWHERE c.gender = 'm' AND d.A2 = 'Hl.m. Praha';",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT COUNT(*) \nFROM client c\nJOIN district d ON c.district_id = d.district_id\nWHERE c.gender = 'm' AND d.A2 = 'Hl.m. Praha';"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "What is the average fastest lap time in seconds for Lewis Hamilton in all the Formula_1 races?",
+      "db_id": "formula_1",
+      "gold_sql": "SELECT AVG(CAST(SUBSTR(T2.fastestLapTime, 1, INSTR(T2.fastestLapTime, ':') - 1) AS INTEGER) * 60 + CAST(SUBSTR(T2.fastestLapTime, INSTR(T2.fastestLapTime, ':') + 1) AS REAL)) FROM drivers AS T1 INNER JOIN results AS T2 ON T1.driverId = T2.driverId WHERE T1.surname = 'Hamilton' AND T1.forename = 'Lewis'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 2,
+      "attempt_count": 2,
+      "final_sql": "SELECT AVG(CAST(SUBSTR(r.fastestLapTime, 1, 2) AS REAL) * 60 + \n           CAST(SUBSTR(r.fastestLapTime, 4, 2) AS REAL) + \n           CAST(SUBSTR(r.fastestLapTime, 7, 3) AS REAL) / 1000) AS average_fastest_lap_seconds\nFROM results r\nJOIN drivers d ON r.driverId = d.driverId\nWHERE d.forename = 'Lewis' AND d.surname = 'Hamilton'\n  AND r.fastestLapTime IS NOT NULL\n  AND LENGTH(r.fastestLapTime) >= 7;",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT AVG(CAST(SUBSTR(r.fastestLapTime, 1, 2) AS REAL) * 3600 + \n           CAST(SUBSTR(r.fastestLapTime, 4, 2) AS REAL) * 60 + \n           CAST(SUBSTR(r.fastestLapTime, 7, 2) AS REAL) + \n           CAST(SUBSTR(r.fastestLapTime, 10, 3) AS REAL) / 1000) AS average_fastest_lap_seconds\nFROM results r\nJOIN drivers d ON r.driverId = d.driverId\nWHERE d.forename = 'Lewis' AND d.surname = 'Hamilton'\n  AND r.fastestLapTime IS NOT NULL;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        },
+        {
+          "sql": "SELECT AVG(CAST(SUBSTR(r.fastestLapTime, 1, 2) AS REAL) * 60 + \n           CAST(SUBSTR(r.fastestLapTime, 4, 2) AS REAL) + \n           CAST(SUBSTR(r.fastestLapTime, 7, 3) AS REAL) / 1000) AS average_fastest_lap_seconds\nFROM results r\nJOIN drivers d ON r.driverId = d.driverId\nWHERE d.forename = 'Lewis' AND d.surname = 'Hamilton'\n  AND r.fastestLapTime IS NOT NULL\n  AND LENGTH(r.fastestLapTime) >= 7;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT AVG(CAST(SUBSTR(r.fastestLapTime, 1, 2) AS REAL) * 3600 + \n           CAST(SUBSTR(r.fastestLapTime, 4, 2) AS REAL) * 60 + \n           CAST(SUBSTR(r.fastestLapTime, 7, 2) AS REAL) + \n           CAST(SUBSTR(r.fastestLapTime, 10, 3) AS REAL) / 1000) AS average_fastest_lap_seconds\nFROM results r\nJOIN drivers d ON r.driverId = d.driverId\nWHERE d.forename = 'Lewis' AND d.surname = 'Hamilton'\n  AND r.fastestLapTime IS NOT NULL;"
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The SQL query incorrectly converts the fastest lap time string to seconds. The format 'MM:SS.mmm' is assumed, but the query uses SUBSTR to extract minutes, seconds, and milliseconds incorrectly. For example, '1:30.123' would be parsed as 1*3600 + 30*60 + 123/1000 = 5400.123 seconds, which is wrong. The correct parsing should extract minutes (first 2 chars), seconds (next 2), and milliseconds (last 3), but the current logic misaligns the substrings. Additionally, the result (3929 seconds \u2248 65 minutes) is implausible for a fastest lap time, which should be around 1-2 minutes. The query logic is fundamentally flawed."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT AVG(CAST(SUBSTR(r.fastestLapTime, 1, 2) AS REAL) * 60 + \n           CAST(SUBSTR(r.fastestLapTime, 4, 2) AS REAL) + \n           CAST(SUBSTR(r.fastestLapTime, 7, 3) AS REAL) / 1000) AS average_fastest_lap_seconds\nFROM results r\nJOIN drivers d ON r.driverId = d.driverId\nWHERE d.forename = 'Lewis' AND d.surname = 'Hamilton'\n  AND r.fastestLapTime IS NOT NULL\n  AND LENGTH(r.fastestLapTime) >= 7;",
+          "issue": "The SQL query incorrectly converts the fastest lap time string to seconds. The format 'MM:SS.mmm' is assumed, but the query uses SUBSTR to extract minutes, seconds, and milliseconds incorrectly. For example, '1:30.123' would be parsed as 1*3600 + 30*60 + 123/1000 = 5400.123 seconds, which is wrong. The correct parsing should extract minutes (first 2 chars), seconds (next 2), and milliseconds (last 3), but the current logic misaligns the substrings. Additionally, the result (3929 seconds \u2248 65 minutes) is implausible for a fastest lap time, which should be around 1-2 minutes. The query logic is fundamentally flawed.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "From race no. 50 to 100, how many finishers have been disqualified?",
+      "db_id": "formula_1",
+      "gold_sql": "SELECT SUM(IIF(time IS NOT NULL, 1, 0)) FROM results WHERE statusId = 2 AND raceID < 100 AND raceId > 50",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT COUNT(*) \nFROM results \nWHERE raceId BETWEEN 50 AND 100 \n  AND statusId IN (\n    SELECT statusId \n    FROM status \n    WHERE status = 'Disqualified'\n  );",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT COUNT(*) \nFROM results \nWHERE raceId BETWEEN 50 AND 100 \n  AND statusId IN (\n    SELECT statusId \n    FROM status \n    WHERE status = 'Disqualified'\n  );",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT COUNT(*) \nFROM results \nWHERE raceId BETWEEN 50 AND 100 \n  AND statusId IN (\n    SELECT statusId \n    FROM status \n    WHERE status = 'Disqualified'\n  );"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "Calculate the difference of the total amount spent in all events by the Student_Club in year 2019 and 2020.",
+      "db_id": "student_club",
+      "gold_sql": "SELECT SUM(CASE WHEN SUBSTR(T1.event_date, 1, 4) = '2019' THEN T2.spent ELSE 0 END) - SUM(CASE WHEN SUBSTR(T1.event_date, 1, 4) = '2020' THEN T2.spent ELSE 0 END) AS num FROM event AS T1 INNER JOIN budget AS T2 ON T1.event_id = T2.link_to_event",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT \n  (SELECT SUM(b.spent) FROM budget b JOIN event e ON b.link_to_event = e.event_id WHERE e.event_date LIKE '2020-%') -\n  (SELECT SUM(b.spent) FROM budget b JOIN event e ON b.link_to_event = e.event_id WHERE e.event_date LIKE '2019-%') AS difference",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT \n  (SELECT SUM(b.spent) FROM budget b JOIN event e ON b.link_to_event = e.event_id WHERE e.event_date LIKE '2020-%') -\n  (SELECT SUM(b.spent) FROM budget b JOIN event e ON b.link_to_event = e.event_id WHERE e.event_date LIKE '2019-%') AS difference",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT \n  (SELECT SUM(b.spent) FROM budget b JOIN event e ON b.link_to_event = e.event_id WHERE e.event_date LIKE '2020-%') -\n  (SELECT SUM(b.spent) FROM budget b JOIN event e ON b.link_to_event = e.event_id WHERE e.event_date LIKE '2019-%') AS difference"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "What is the complete address of the school with the lowest excellence rate? Indicate the Street, City, Zip and State.",
+      "db_id": "california_schools",
+      "gold_sql": "SELECT T2.Street, T2.City, T2.State, T2.Zip FROM satscores AS T1 INNER JOIN schools AS T2 ON T1.cds = T2.CDSCode ORDER BY CAST(T1.NumGE1500 AS REAL) / T1.NumTstTakr ASC LIMIT 1",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT s.\"Street\", s.\"City\", s.\"Zip\", s.\"State\"\nFROM \"schools\" s\nJOIN \"satscores\" ss ON s.\"CDSCode\" = ss.\"cds\"\nORDER BY ss.\"NumGE1500\" / ss.\"NumTstTakr\" ASC\nLIMIT 1;",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT s.\"Street\", s.\"City\", s.\"Zip\", s.\"State\"\nFROM \"schools\" s\nJOIN \"satscores\" ss ON s.\"CDSCode\" = ss.\"cds\"\nORDER BY ss.\"NumGE1500\" / ss.\"NumTstTakr\" ASC\nLIMIT 1;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT s.\"Street\", s.\"City\", s.\"Zip\", s.\"State\"\nFROM \"schools\" s\nJOIN \"satscores\" ss ON s.\"CDSCode\" = ss.\"cds\"\nORDER BY ss.\"NumGE1500\" / ss.\"NumTstTakr\" ASC\nLIMIT 1;"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "Calculate the percentage of carcinogenic molecules which contain the Chlorine element.",
+      "db_id": "toxicology",
+      "gold_sql": "SELECT COUNT(CASE WHEN T2.label = '+' AND T1.element = 'cl' THEN T2.molecule_id ELSE NULL END) * 100 / COUNT(T2.molecule_id) FROM atom AS T1 INNER JOIN molecule AS T2 ON T1.molecule_id = T2.molecule_id",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 3,
+      "attempt_count": 3,
+      "final_sql": "SELECT \n    (COUNT(CASE WHEN a.element = 'Cl' THEN 1 END) * 100.0 / \n     NULLIF(COUNT(*), 0)) AS percentage\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE m.label = 'carcinogenic'\n  AND a.element = 'Cl';",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT \n    (COUNT(CASE WHEN m.label = 'carcinogenic' AND a.element = 'Cl' THEN 1 END) * 100.0 / \n     COUNT(CASE WHEN m.label = 'carcinogenic' THEN 1 END)) AS percentage\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE m.label = 'carcinogenic';",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        },
+        {
+          "sql": "SELECT \n    (COUNT(CASE WHEN a.element = 'Cl' THEN 1 END) * 100.0 / \n     COUNT(*)) AS percentage\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE m.label = 'carcinogenic';",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        },
+        {
+          "sql": "SELECT \n    (COUNT(CASE WHEN a.element = 'Cl' THEN 1 END) * 100.0 / \n     NULLIF(COUNT(*), 0)) AS percentage\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE m.label = 'carcinogenic'\n  AND a.element = 'Cl';",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT \n    (COUNT(CASE WHEN m.label = 'carcinogenic' AND a.element = 'Cl' THEN 1 END) * 100.0 / \n     COUNT(CASE WHEN m.label = 'carcinogenic' THEN 1 END)) AS percentage\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE m.label = 'carcinogenic';"
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The query returned no rows, but the question expects a percentage calculation. Since there are no results, the query failed to produce an answer, likely due to no carcinogenic molecules containing chlorine or a logical error in the query."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT \n    (COUNT(CASE WHEN a.element = 'Cl' THEN 1 END) * 100.0 / \n     COUNT(*)) AS percentage\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE m.label = 'carcinogenic';",
+          "issue": "The query returned no rows, but the question expects a percentage calculation. Since there are no results, the query failed to produce an answer, likely due to no carcinogenic molecules containing chlorine or a logical error in the query.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The result shows 'None' for the percentage, which indicates the query did not return a valid numeric value. This suggests the query failed to compute the percentage, possibly due to division by zero (if no carcinogenic molecules were found) or an issue with the CASE expression. The question expects a percentage value, but 'None' is not a valid answer."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT \n    (COUNT(CASE WHEN a.element = 'Cl' THEN 1 END) * 100.0 / \n     NULLIF(COUNT(*), 0)) AS percentage\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE m.label = 'carcinogenic'\n  AND a.element = 'Cl';",
+          "issue": "The result shows 'None' for the percentage, which indicates the query did not return a valid numeric value. This suggests the query failed to compute the percentage, possibly due to division by zero (if no carcinogenic molecules were found) or an issue with the CASE expression. The question expects a percentage value, but 'None' is not a valid answer.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The query returned no rows, but the question expects a percentage calculation. Since there are no results, the percentage cannot be determined, indicating either no carcinogenic molecules contain chlorine or the query failed to return data. The result 'None' suggests an issue with the query execution or data availability."
+        }
+      ]
+    },
+    {
+      "question": "How many users received commentator badges in 2014?",
+      "db_id": "codebase_community",
+      "gold_sql": "SELECT COUNT(Id) FROM badges WHERE Name = 'Commentator' AND STRFTIME('%Y', Date) = '2014'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT COUNT(DISTINCT b.UserId)\nFROM badges b\nWHERE b.Name = 'Commentator'\n  AND strftime('%Y', b.Date) = '2014';",
+      "final_correct": true,
+      "per_iteration": [
+        {
+          "sql": "SELECT COUNT(DISTINCT b.UserId)\nFROM badges b\nWHERE b.Name = 'Commentator'\n  AND strftime('%Y', b.Date) = '2014';",
+          "correct": true,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT COUNT(DISTINCT b.UserId)\nFROM badges b\nWHERE b.Name = 'Commentator'\n  AND strftime('%Y', b.Date) = '2014';"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "Among the patients with a normal Ig G level, how many of them have symptoms?",
+      "db_id": "thrombosis_prediction",
+      "gold_sql": "SELECT COUNT(T1.ID) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID INNER JOIN Examination AS T3 ON T3.ID = T2.ID WHERE T2.IGG BETWEEN 900 AND 2000 AND T3.Symptoms IS NOT NULL",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT COUNT(*) \nFROM \"Examination\" e\nJOIN \"Patient\" p ON e.\"ID\" = p.\"ID\"\nWHERE e.\"aCL IgG\" <= 20 AND e.\"Symptoms\" IS NOT NULL;",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT COUNT(*) \nFROM \"Examination\" e\nJOIN \"Patient\" p ON e.\"ID\" = p.\"ID\"\nWHERE e.\"aCL IgG\" <= 20 AND e.\"Symptoms\" IS NOT NULL;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT COUNT(*) \nFROM \"Examination\" e\nJOIN \"Patient\" p ON e.\"ID\" = p.\"ID\"\nWHERE e.\"aCL IgG\" <= 20 AND e.\"Symptoms\" IS NOT NULL;"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "How many superheroes have the super power of \"Super Strength\"?",
+      "db_id": "superhero",
+      "gold_sql": "SELECT COUNT(T1.hero_id) FROM hero_power AS T1 INNER JOIN superpower AS T2 ON T1.power_id = T2.id WHERE T2.power_name = 'Super Strength'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 2,
+      "attempt_count": 2,
+      "final_sql": "SELECT COUNT(DISTINCT hp.hero_id)\nFROM superhero s\nJOIN hero_power hp ON s.id = hp.hero_id\nJOIN superpower p ON hp.power_id = p.id\nWHERE p.power_name = 'Super Strength';",
+      "final_correct": true,
+      "per_iteration": [
+        {
+          "sql": "SELECT COUNT(DISTINCT sp.hero_id)\nFROM superhero sp\nJOIN hero_power hp ON sp.id = hp.hero_id\nJOIN superpower p ON hp.power_id = p.id\nWHERE p.power_name = 'Super Strength';",
+          "correct": false,
+          "pred_ok": false,
+          "error": "OperationalError: no such column: sp.hero_id"
+        },
+        {
+          "sql": "SELECT COUNT(DISTINCT hp.hero_id)\nFROM superhero s\nJOIN hero_power hp ON s.id = hp.hero_id\nJOIN superpower p ON hp.power_id = p.id\nWHERE p.power_name = 'Super Strength';",
+          "correct": true,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT COUNT(DISTINCT sp.hero_id)\nFROM superhero sp\nJOIN hero_power hp ON sp.id = hp.hero_id\nJOIN superpower p ON hp.power_id = p.id\nWHERE p.power_name = 'Super Strength';"
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The SQL query references a column 'sp.hero_id' that does not exist in the 'superhero' table, causing a syntax error."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT COUNT(DISTINCT hp.hero_id)\nFROM superhero s\nJOIN hero_power hp ON s.id = hp.hero_id\nJOIN superpower p ON hp.power_id = p.id\nWHERE p.power_name = 'Super Strength';",
+          "issue": "The SQL query references a column 'sp.hero_id' that does not exist in the 'superhero' table, causing a syntax error.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "Please list the name of the cards in the set Coldsnap with the highest converted mana cost.",
+      "db_id": "card_games",
+      "gold_sql": "SELECT T1.name FROM cards AS T1 INNER JOIN sets AS T2 ON T2.code = T1.setCode WHERE T2.name = 'Coldsnap' ORDER BY T1.convertedManaCost DESC LIMIT 1",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT c.\"name\"\nFROM \"cards\" c\nJOIN \"sets\" s ON c.\"setCode\" = s.\"code\"\nWHERE s.\"name\" = 'Coldsnap'\nORDER BY c.\"convertedManaCost\" DESC\nLIMIT 1;",
+      "final_correct": true,
+      "per_iteration": [
+        {
+          "sql": "SELECT c.\"name\"\nFROM \"cards\" c\nJOIN \"sets\" s ON c.\"setCode\" = s.\"code\"\nWHERE s.\"name\" = 'Coldsnap'\nORDER BY c.\"convertedManaCost\" DESC\nLIMIT 1;",
+          "correct": true,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT c.\"name\"\nFROM \"cards\" c\nJOIN \"sets\" s ON c.\"setCode\" = s.\"code\"\nWHERE s.\"name\" = 'Coldsnap'\nORDER BY c.\"convertedManaCost\" DESC\nLIMIT 1;"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "For all patients with normal uric acid (UA), what is the average UA index based on their latest laboratory examination result?",
+      "db_id": "thrombosis_prediction",
+      "gold_sql": "SELECT AVG(T2.UA) FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE (T2.UA < 6.5 AND T1.SEX = 'F') OR (T2.UA < 8.0 AND T1.SEX = 'M') AND T2.Date = ( SELECT MAX(Date) FROM Laboratory )",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT AVG(l.\"UA\") AS average_UA\nFROM \"Laboratory\" l\nJOIN \"Patient\" p ON l.\"ID\" = p.\"ID\"\nWHERE l.\"UA\" BETWEEN 3.0 AND 7.0\n  AND l.\"Date\" = (\n    SELECT MAX(l2.\"Date\")\n    FROM \"Laboratory\" l2\n    WHERE l2.\"ID\" = l.\"ID\"\n  );",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT AVG(l.\"UA\") AS average_UA\nFROM \"Laboratory\" l\nJOIN \"Patient\" p ON l.\"ID\" = p.\"ID\"\nWHERE l.\"UA\" BETWEEN 3.0 AND 7.0\n  AND l.\"Date\" = (\n    SELECT MAX(l2.\"Date\")\n    FROM \"Laboratory\" l2\n    WHERE l2.\"ID\" = l.\"ID\"\n  );",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT AVG(l.\"UA\") AS average_UA\nFROM \"Laboratory\" l\nJOIN \"Patient\" p ON l.\"ID\" = p.\"ID\"\nWHERE l.\"UA\" BETWEEN 3.0 AND 7.0\n  AND l.\"Date\" = (\n    SELECT MAX(l2.\"Date\")\n    FROM \"Laboratory\" l2\n    WHERE l2.\"ID\" = l.\"ID\"\n  );"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "User No.23853 gave a comment to a post at 9:08:18 on 2013/7/12, was that post well-finished?",
+      "db_id": "codebase_community",
+      "gold_sql": "SELECT IIF(T2.ClosedDate IS NULL, 'NOT well-finished', 'well-finished') AS resylt FROM comments AS T1 INNER JOIN posts AS T2 ON T1.PostId = T2.Id WHERE T1.UserId = 23853 AND T1.CreationDate = '2013-07-12 09:08:18.0'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 2,
+      "attempt_count": 2,
+      "final_sql": "SELECT \n    CASE \n        WHEN p.AcceptedAnswerId IS NOT NULL AND p.AnswerCount > 0 THEN 'Yes'\n        ELSE 'No'\n    END AS \"WellFinished\"\nFROM posts p\nJOIN comments c ON p.Id = c.PostId\nWHERE c.UserId = 23853\n  AND c.CreationDate >= '2013-07-12 09:08:18'\n  AND c.CreationDate < '2013-07-12 09:08:19'\n  AND p.PostTypeId = 1;",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT p.Title, p.PostTypeId, p.CreaionDate, p.Score, p.ViewCount, p.AnswerCount, p.CommentCount, p.FavoriteCount\nFROM posts p\nJOIN comments c ON p.Id = c.PostId\nWHERE c.UserId = 23853\n  AND c.CreationDate = '2013-07-12 09:08:18'\n  AND p.PostTypeId = 1  -- Assuming PostTypeId = 1 means a question (common in Stack Overflow schema)\n  AND p.AnswerCount > 0\n  AND p.AcceptedAnswerId IS NOT NULL;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        },
+        {
+          "sql": "SELECT \n    CASE \n        WHEN p.AcceptedAnswerId IS NOT NULL AND p.AnswerCount > 0 THEN 'Yes'\n        ELSE 'No'\n    END AS \"WellFinished\"\nFROM posts p\nJOIN comments c ON p.Id = c.PostId\nWHERE c.UserId = 23853\n  AND c.CreationDate >= '2013-07-12 09:08:18'\n  AND c.CreationDate < '2013-07-12 09:08:19'\n  AND p.PostTypeId = 1;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT p.Title, p.PostTypeId, p.CreaionDate, p.Score, p.ViewCount, p.AnswerCount, p.CommentCount, p.FavoriteCount\nFROM posts p\nJOIN comments c ON p.Id = c.PostId\nWHERE c.UserId = 23853\n  AND c.CreationDate = '2013-07-12 09:08:18'\n  AND p.PostTypeId = 1  -- Assuming PostTypeId = 1 means a question (common in Stack Overflow schema)\n  AND p.AnswerCount > 0\n  AND p.AcceptedAnswerId IS NOT NULL;"
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The query returns 0 rows, but the question asks whether the post was well-finished, which typically means it has an accepted answer (i.e., p.AcceptedAnswerId IS NOT NULL) and at least one answer (p.AnswerCount > 0). Since no rows were returned, it implies the post did not meet these criteria, but the query result does not confirm whether the post existed or was valid. The absence of results could be due to a mismatch in the timestamp (e.g., precision or timezone), or the post might not exist. However, the question expects a yes/no answer about the post's state, and the query fails to return any data to answer it, so it cannot be considered a valid response."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT \n    CASE \n        WHEN p.AcceptedAnswerId IS NOT NULL AND p.AnswerCount > 0 THEN 'Yes'\n        ELSE 'No'\n    END AS \"WellFinished\"\nFROM posts p\nJOIN comments c ON p.Id = c.PostId\nWHERE c.UserId = 23853\n  AND c.CreationDate >= '2013-07-12 09:08:18'\n  AND c.CreationDate < '2013-07-12 09:08:19'\n  AND p.PostTypeId = 1;",
+          "issue": "The query returns 0 rows, but the question asks whether the post was well-finished, which typically means it has an accepted answer (i.e., p.AcceptedAnswerId IS NOT NULL) and at least one answer (p.AnswerCount > 0). Since no rows were returned, it implies the post did not meet these criteria, but the query result does not confirm whether the post existed or was valid. The absence of results could be due to a mismatch in the timestamp (e.g., precision or timezone), or the post might not exist. However, the question expects a yes/no answer about the post's state, and the query fails to return any data to answer it, so it cannot be considered a valid response.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "How many members of Business have the Medium size of tee shirt?",
+      "db_id": "student_club",
+      "gold_sql": "SELECT COUNT(T2.member_id) FROM major AS T1 INNER JOIN member AS T2 ON T1.major_id = T2.link_to_major WHERE T1.major_name = 'Business' AND T2.t_shirt_size = 'Medium'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT COUNT(*) \nFROM \"member\" m\nJOIN \"major\" maj ON m.\"link_to_major\" = maj.\"major_id\"\nWHERE maj.\"major_name\" = 'Business' \n  AND m.\"t_shirt_size\" = 'Medium';",
+      "final_correct": true,
+      "per_iteration": [
+        {
+          "sql": "SELECT COUNT(*) \nFROM \"member\" m\nJOIN \"major\" maj ON m.\"link_to_major\" = maj.\"major_id\"\nWHERE maj.\"major_name\" = 'Business' \n  AND m.\"t_shirt_size\" = 'Medium';",
+          "correct": true,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT COUNT(*) \nFROM \"member\" m\nJOIN \"major\" maj ON m.\"link_to_major\" = maj.\"major_id\"\nWHERE maj.\"major_name\" = 'Business' \n  AND m.\"t_shirt_size\" = 'Medium';"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "What is the type of the card \"Ancestor's Chosen\" as originally printed?",
+      "db_id": "card_games",
+      "gold_sql": "SELECT originalType FROM cards WHERE name = 'Ancestor''s Chosen' AND originalType IS NOT NULL",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 2,
+      "attempt_count": 2,
+      "final_sql": "SELECT DISTINCT originalType\nFROM cards\nWHERE name = 'Ancestor''s Chosen'\n  AND originalType IS NOT NULL\nLIMIT 1;",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT originalType\nFROM cards\nWHERE name = 'Ancestor''s Chosen';",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        },
+        {
+          "sql": "SELECT DISTINCT originalType\nFROM cards\nWHERE name = 'Ancestor''s Chosen'\n  AND originalType IS NOT NULL\nLIMIT 1;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT originalType\nFROM cards\nWHERE name = 'Ancestor''s Chosen';"
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The query returns multiple rows with different values for originalType, but the question asks for the type as originally printed, implying a single definitive answer. The presence of multiple distinct values suggests ambiguity or incorrect data, making the result unreliable for answering the question."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT DISTINCT originalType\nFROM cards\nWHERE name = 'Ancestor''s Chosen'\n  AND originalType IS NOT NULL\nLIMIT 1;",
+          "issue": "The query returns multiple rows with different values for originalType, but the question asks for the type as originally printed, implying a single definitive answer. The presence of multiple distinct values suggests ambiguity or incorrect data, making the result unreliable for answering the question.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "Which active district has the highest average score in Reading?",
+      "db_id": "california_schools",
+      "gold_sql": "SELECT T1.District FROM schools AS T1 INNER JOIN satscores AS T2 ON T1.CDSCode = T2.cds WHERE T1.StatusType = 'Active' ORDER BY T2.AvgScrRead DESC LIMIT 1",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT s.\"District\"\nFROM \"schools\" s\nJOIN \"satscores\" ss ON s.\"CDSCode\" = ss.\"cds\"\nWHERE s.\"StatusType\" = 'Active'\nORDER BY ss.\"AvgScrRead\" DESC\nLIMIT 1;",
+      "final_correct": true,
+      "per_iteration": [
+        {
+          "sql": "SELECT s.\"District\"\nFROM \"schools\" s\nJOIN \"satscores\" ss ON s.\"CDSCode\" = ss.\"cds\"\nWHERE s.\"StatusType\" = 'Active'\nORDER BY ss.\"AvgScrRead\" DESC\nLIMIT 1;",
+          "correct": true,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT s.\"District\"\nFROM \"schools\" s\nJOIN \"satscores\" ss ON s.\"CDSCode\" = ss.\"cds\"\nWHERE s.\"StatusType\" = 'Active'\nORDER BY ss.\"AvgScrRead\" DESC\nLIMIT 1;"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "Please provide the IDs of the 3 female clients with the largest loans.",
+      "db_id": "financial",
+      "gold_sql": "SELECT T1.client_id FROM client AS T1 INNER JOIN disp AS T4 on T1.client_id= T4.client_id INNER JOIN account AS T2 ON T4.account_id = T2.account_id  INNER JOIN loan AS T3 ON T2.account_id = T3.account_id and T4.account_id = T3.account_id WHERE T1.gender = 'F' ORDER BY T3.amount DESC LIMIT 3",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT c.client_id\nFROM client c\nJOIN disp d ON c.client_id = d.client_id\nJOIN loan l ON d.account_id = l.account_id\nWHERE c.gender = 'F'\nORDER BY l.amount DESC\nLIMIT 3;",
+      "final_correct": true,
+      "per_iteration": [
+        {
+          "sql": "SELECT c.client_id\nFROM client c\nJOIN disp d ON c.client_id = d.client_id\nJOIN loan l ON d.account_id = l.account_id\nWHERE c.gender = 'F'\nORDER BY l.amount DESC\nLIMIT 3;",
+          "correct": true,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT c.client_id\nFROM client c\nJOIN disp d ON c.client_id = d.client_id\nJOIN loan l ON d.account_id = l.account_id\nWHERE c.gender = 'F'\nORDER BY l.amount DESC\nLIMIT 3;"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "Among all the lap records set on various circuits, what is the time for the fastest one?",
+      "db_id": "formula_1",
+      "gold_sql": "SELECT time FROM lapTimes ORDER BY (CASE WHEN INSTR(time, ':') <> INSTR(SUBSTR(time, INSTR(time, ':') + 1), ':') + INSTR(time, ':') THEN CAST(SUBSTR(time, 1, INSTR(time, ':') - 1) AS REAL) * 3600 ELSE 0 END) + (CAST(SUBSTR(time, INSTR(time, ':') - 2 * (INSTR(time, ':') = INSTR(SUBSTR(time, INSTR(time, ':') + 1), ':') + INSTR(time, ':')), INSTR(time, ':') - 1) AS REAL) * 60) + (CAST(SUBSTR(time, INSTR(time, ':') + 1, INSTR(time, '.') - INSTR(time, ':') - 1) AS REAL)) + (CAST(SUBSTR(time, INSTR(time, '.') + 1) AS REAL) / 1000) ASC LIMIT 1",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT MIN(milliseconds) AS fastest_lap_time\nFROM lapTimes\nWHERE milliseconds IS NOT NULL;",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT MIN(milliseconds) AS fastest_lap_time\nFROM lapTimes\nWHERE milliseconds IS NOT NULL;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT MIN(milliseconds) AS fastest_lap_time\nFROM lapTimes\nWHERE milliseconds IS NOT NULL;"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "In superheroes with missing weight data, calculate the difference between the number of superheroes with blue eyes and no eye color.",
+      "db_id": "superhero",
+      "gold_sql": "SELECT SUM(CASE WHEN T2.id = 7 THEN 1 ELSE 0 END) - SUM(CASE WHEN T2.id = 1 THEN 1 ELSE 0 END) FROM superhero AS T1 INNER JOIN colour AS T2 ON T1.eye_colour_id = T2.id WHERE T1.weight_kg = 0 OR T1.weight_kg is NULL",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT \n  (SELECT COUNT(*) FROM superhero s JOIN colour c ON s.eye_colour_id = c.id WHERE c.colour = 'blue' AND s.weight_kg IS NULL) -\n  (SELECT COUNT(*) FROM superhero s WHERE s.eye_colour_id IS NULL AND s.weight_kg IS NULL) AS difference",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT \n  (SELECT COUNT(*) FROM superhero s JOIN colour c ON s.eye_colour_id = c.id WHERE c.colour = 'blue' AND s.weight_kg IS NULL) -\n  (SELECT COUNT(*) FROM superhero s WHERE s.eye_colour_id IS NULL AND s.weight_kg IS NULL) AS difference",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT \n  (SELECT COUNT(*) FROM superhero s JOIN colour c ON s.eye_colour_id = c.id WHERE c.colour = 'blue' AND s.weight_kg IS NULL) -\n  (SELECT COUNT(*) FROM superhero s WHERE s.eye_colour_id IS NULL AND s.weight_kg IS NULL) AS difference"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "In the College of Agriculture and Applied Sciences, how many majors are under the department of School of Applied Sciences, Technology and Education?",
+      "db_id": "student_club",
+      "gold_sql": "SELECT COUNT(major_id) FROM major WHERE department = 'School of Applied Sciences, Technology and Education' AND college = 'College of Agriculture and Applied Sciences'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT COUNT(*) \nFROM \"major\" \nWHERE \"college\" = 'College of Agriculture and Applied Sciences' \n  AND \"department\" = 'School of Applied Sciences, Technology and Education';",
+      "final_correct": true,
+      "per_iteration": [
+        {
+          "sql": "SELECT COUNT(*) \nFROM \"major\" \nWHERE \"college\" = 'College of Agriculture and Applied Sciences' \n  AND \"department\" = 'School of Applied Sciences, Technology and Education';",
+          "correct": true,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT COUNT(*) \nFROM \"major\" \nWHERE \"college\" = 'College of Agriculture and Applied Sciences' \n  AND \"department\" = 'School of Applied Sciences, Technology and Education';"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "Mention the display name and location of the user who owned the excerpt post with hypothesis-testing tag.",
+      "db_id": "codebase_community",
+      "gold_sql": "SELECT T3.DisplayName, T3.Location FROM tags AS T1 INNER JOIN posts AS T2 ON T1.ExcerptPostId = T2.Id INNER JOIN users AS T3 ON T3.Id = T2.OwnerUserId WHERE T1.TagName = 'hypothesis-testing'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT u.\"DisplayName\", u.\"Location\"\nFROM \"users\" u\nJOIN \"tags\" t ON u.\"Id\" = t.\"ExcerptPostId\"\nWHERE t.\"TagName\" = 'hypothesis-testing';",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT u.\"DisplayName\", u.\"Location\"\nFROM \"users\" u\nJOIN \"tags\" t ON u.\"Id\" = t.\"ExcerptPostId\"\nWHERE t.\"TagName\" = 'hypothesis-testing';",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT u.\"DisplayName\", u.\"Location\"\nFROM \"users\" u\nJOIN \"tags\" t ON u.\"Id\" = t.\"ExcerptPostId\"\nWHERE t.\"TagName\" = 'hypothesis-testing';"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "List all patients who were followed up at the outpatient clinic who underwent a laboratory test in October 1991 and had a total blood bilirubin level within the normal range.",
+      "db_id": "thrombosis_prediction",
+      "gold_sql": "SELECT DISTINCT T1.ID FROM Patient AS T1 INNER JOIN Laboratory AS T2 ON T1.ID = T2.ID WHERE T1.Admission = '-' AND T2.`T-BIL` < 2.0 AND T2.Date LIKE '1991-10-%'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT DISTINCT p.*\nFROM \"Patient\" p\nJOIN \"Laboratory\" l ON p.\"ID\" = l.\"ID\"\nWHERE p.\"Admission\" = 'outpatient clinic'\n  AND l.\"Date\" >= '1991-10-01'\n  AND l.\"Date\" < '1991-11-01'\n  AND l.\"T-BIL\" BETWEEN 0.2 AND 1.2;",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT DISTINCT p.*\nFROM \"Patient\" p\nJOIN \"Laboratory\" l ON p.\"ID\" = l.\"ID\"\nWHERE p.\"Admission\" = 'outpatient clinic'\n  AND l.\"Date\" >= '1991-10-01'\n  AND l.\"Date\" < '1991-11-01'\n  AND l.\"T-BIL\" BETWEEN 0.2 AND 1.2;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT DISTINCT p.*\nFROM \"Patient\" p\nJOIN \"Laboratory\" l ON p.\"ID\" = l.\"ID\"\nWHERE p.\"Admission\" = 'outpatient clinic'\n  AND l.\"Date\" >= '1991-10-01'\n  AND l.\"Date\" < '1991-11-01'\n  AND l.\"T-BIL\" BETWEEN 0.2 AND 1.2;"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "Among the molecules with element Calcium, are they mostly carcinogenic or non carcinogenic?",
+      "db_id": "toxicology",
+      "gold_sql": "SELECT T2.label FROM atom AS T1 INNER JOIN molecule AS T2 ON T1.molecule_id = T2.molecule_id WHERE T1.element = 'ca' GROUP BY T2.label ORDER BY COUNT(T2.label) DESC LIMIT 1",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 3,
+      "attempt_count": 3,
+      "final_sql": "SELECT \n    CASE \n        WHEN m.label = 'carcinogenic' THEN 'carcinogenic'\n        ELSE 'non carcinogenic'\n    END AS carcinogenic_status,\n    COUNT(*) AS count\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE a.element = 'Ca'\n  AND m.label IN ('carcinogenic', 'non carcinogenic')\nGROUP BY carcinogenic_status\nORDER BY count DESC;",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT \n    CASE \n        WHEN m.label = 'carcinogenic' THEN 'carcinogenic'\n        ELSE 'non carcinogenic'\n    END AS carcinogenic_status,\n    COUNT(*) AS count\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE a.element = 'Calcium'\nGROUP BY carcinogenic_status\nORDER BY count DESC\nLIMIT 1;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        },
+        {
+          "sql": "SELECT \n    CASE \n        WHEN m.label = 'carcinogenic' THEN 'carcinogenic'\n        ELSE 'non carcinogenic'\n    END AS carcinogenic_status,\n    COUNT(*) AS count\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE a.element = 'Ca'\nGROUP BY carcinogenic_status\nORDER BY count DESC;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        },
+        {
+          "sql": "SELECT \n    CASE \n        WHEN m.label = 'carcinogenic' THEN 'carcinogenic'\n        ELSE 'non carcinogenic'\n    END AS carcinogenic_status,\n    COUNT(*) AS count\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE a.element = 'Ca'\n  AND m.label IN ('carcinogenic', 'non carcinogenic')\nGROUP BY carcinogenic_status\nORDER BY count DESC;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT \n    CASE \n        WHEN m.label = 'carcinogenic' THEN 'carcinogenic'\n        ELSE 'non carcinogenic'\n    END AS carcinogenic_status,\n    COUNT(*) AS count\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE a.element = 'Calcium'\nGROUP BY carcinogenic_status\nORDER BY count DESC\nLIMIT 1;"
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The query returned 0 rows, but the question expects a result about molecules with Calcium, implying at least one such molecule should exist. The absence of results suggests either no molecules with Calcium were found or the query logic failed to retrieve them, making the answer incomplete or incorrect."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT \n    CASE \n        WHEN m.label = 'carcinogenic' THEN 'carcinogenic'\n        ELSE 'non carcinogenic'\n    END AS carcinogenic_status,\n    COUNT(*) AS count\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE a.element = 'Ca'\nGROUP BY carcinogenic_status\nORDER BY count DESC;",
+          "issue": "The query returned 0 rows, but the question expects a result about molecules with Calcium, implying at least one such molecule should exist. The absence of results suggests either no molecules with Calcium were found or the query logic failed to retrieve them, making the answer incomplete or incorrect.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The query returned zero rows, but the question expects a count of molecules with calcium to determine if they are mostly carcinogenic or non-carcinogenic. Zero rows suggest no molecules with calcium were found, which contradicts the premise of the question. This indicates either a data issue or a failure to retrieve relevant data."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT \n    CASE \n        WHEN m.label = 'carcinogenic' THEN 'carcinogenic'\n        ELSE 'non carcinogenic'\n    END AS carcinogenic_status,\n    COUNT(*) AS count\nFROM molecule m\nJOIN atom a ON m.molecule_id = a.molecule_id\nWHERE a.element = 'Ca'\n  AND m.label IN ('carcinogenic', 'non carcinogenic')\nGROUP BY carcinogenic_status\nORDER BY count DESC;",
+          "issue": "The query returned zero rows, but the question expects a count of molecules with calcium to determine if they are mostly carcinogenic or non-carcinogenic. Zero rows suggest no molecules with calcium were found, which contradicts the premise of the question. This indicates either a data issue or a failure to retrieve relevant data.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The query returned zero rows, but the question expects a count of molecules with calcium that are either carcinogenic or non-carcinogenic. Since no results were returned, it's impossible to determine the distribution, making the result insufficient to answer the question."
+        }
+      ]
+    },
+    {
+      "question": "Please list the full names of the students in the Student_Club that come from the Art and Design Department.",
+      "db_id": "student_club",
+      "gold_sql": "SELECT T1.first_name, T1.last_name FROM member AS T1 INNER JOIN major AS T2 ON T1.link_to_major = T2.major_id WHERE T2.department = 'Art and Design Department'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 3,
+      "attempt_count": 3,
+      "final_sql": "SELECT m.first_name, m.last_name\nFROM member m\nJOIN major maj ON m.link_to_major = maj.major_id\nWHERE maj.department = 'Art and Design'\n  AND m.member_id IN (SELECT link_to_member FROM attendance);",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT m.first_name, m.last_name\nFROM member m\nJOIN major maj ON m.link_to_major = maj.major_id\nWHERE maj.department = 'Art and Design';",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        },
+        {
+          "sql": "SELECT m.first_name, m.last_name\nFROM member m\nJOIN major maj ON m.link_to_major = maj.major_id\nJOIN attendance a ON m.member_id = a.link_to_member\nWHERE maj.department = 'Art and Design';",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        },
+        {
+          "sql": "SELECT m.first_name, m.last_name\nFROM member m\nJOIN major maj ON m.link_to_major = maj.major_id\nWHERE maj.department = 'Art and Design'\n  AND m.member_id IN (SELECT link_to_member FROM attendance);",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT m.first_name, m.last_name\nFROM member m\nJOIN major maj ON m.link_to_major = maj.major_id\nWHERE maj.department = 'Art and Design';"
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The question asks for students in the Student_Club, but the SQL query does not join with the Student_Club table or any related table that would identify club membership. The query only filters by major department, which may include students not in the club. Therefore, the result does not answer the intended question."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT m.first_name, m.last_name\nFROM member m\nJOIN major maj ON m.link_to_major = maj.major_id\nJOIN attendance a ON m.member_id = a.link_to_member\nWHERE maj.department = 'Art and Design';",
+          "issue": "The question asks for students in the Student_Club, but the SQL query does not join with the Student_Club table or any related table that would identify club membership. The query only filters by major department, which may include students not in the club. Therefore, the result does not answer the intended question.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The query does not include the Student_Club table or any condition related to club membership, so it cannot identify students in the Student_Club from the Art and Design Department. The result is empty because the query is not aligned with the question."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT m.first_name, m.last_name\nFROM member m\nJOIN major maj ON m.link_to_major = maj.major_id\nWHERE maj.department = 'Art and Design'\n  AND m.member_id IN (SELECT link_to_member FROM attendance);",
+          "issue": "The query does not include the Student_Club table or any condition related to club membership, so it cannot identify students in the Student_Club from the Art and Design Department. The result is empty because the query is not aligned with the question.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The query returned zero rows, but the question implies there should be students from the Art and Design Department in the Student_Club. This suggests either no such students exist, or the query logic is incorrect (e.g., the attendance table may not correctly link to the Student_Club, or the membership condition is too restrictive)."
+        }
+      ]
+    },
+    {
+      "question": "List all the mythic rarity print cards banned in gladiator format.",
+      "db_id": "card_games",
+      "gold_sql": "SELECT DISTINCT T1.id FROM cards AS T1 INNER JOIN legalities AS T2 ON T1.uuid = T2.uuid WHERE T2.format = 'gladiator' AND T2.status = 'Banned' AND T1.rarity = 'mythic'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT c.name\nFROM cards c\nJOIN legalities l ON c.uuid = l.uuid\nWHERE c.rarity = 'mythic'\n  AND l.format = 'gladiator'\n  AND l.status = 'banned';",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT c.name\nFROM cards c\nJOIN legalities l ON c.uuid = l.uuid\nWHERE c.rarity = 'mythic'\n  AND l.format = 'gladiator'\n  AND l.status = 'banned';",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT c.name\nFROM cards c\nJOIN legalities l ON c.uuid = l.uuid\nWHERE c.rarity = 'mythic'\n  AND l.format = 'gladiator'\n  AND l.status = 'banned';"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "Among posts by Harvey Motulsky and Noah Snyder, which one has higher popularity?",
+      "db_id": "codebase_community",
+      "gold_sql": "SELECT T1.DisplayName FROM users AS T1 INNER JOIN postHistory AS T2 ON T1.Id = T2.UserId INNER JOIN posts AS T3 ON T2.PostId = T3.Id WHERE T1.DisplayName = 'Harvey Motulsky' OR T1.DisplayName = 'Noah Snyder' GROUP BY T1.DisplayName ORDER BY SUM(T3.ViewCount) DESC LIMIT 1",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 1,
+      "attempt_count": 1,
+      "final_sql": "SELECT p.Title, p.Score, p.ViewCount\nFROM posts p\nJOIN users u ON p.OwnerUserId = u.Id\nWHERE u.DisplayName IN ('Harvey Motulsky', 'Noah Snyder')\nORDER BY p.Score DESC, p.ViewCount DESC\nLIMIT 1;",
+      "final_correct": false,
+      "per_iteration": [
+        {
+          "sql": "SELECT p.Title, p.Score, p.ViewCount\nFROM posts p\nJOIN users u ON p.OwnerUserId = u.Id\nWHERE u.DisplayName IN ('Harvey Motulsky', 'Noah Snyder')\nORDER BY p.Score DESC, p.ViewCount DESC\nLIMIT 1;",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT p.Title, p.Score, p.ViewCount\nFROM posts p\nJOIN users u ON p.OwnerUserId = u.Id\nWHERE u.DisplayName IN ('Harvey Motulsky', 'Noah Snyder')\nORDER BY p.Score DESC, p.ViewCount DESC\nLIMIT 1;"
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    },
+    {
+      "question": "Mention the reputation of users who had obtained the badge on 7/19/2010 7:39:08 PM.",
+      "db_id": "codebase_community",
+      "gold_sql": "SELECT T1.Reputation FROM users AS T1 INNER JOIN badges AS T2 ON T1.Id = T2.UserId WHERE T2.Date = '2010-07-19 19:39:08.0'",
+      "gold_ok": true,
+      "gold_error": null,
+      "iterations": 2,
+      "attempt_count": 2,
+      "final_sql": "SELECT u.Reputation\nFROM users u\nJOIN badges b ON u.Id = b.UserId\nWHERE b.Date LIKE '2010-07-19 19:39:08%'",
+      "final_correct": true,
+      "per_iteration": [
+        {
+          "sql": "SELECT u.Reputation\nFROM users u\nJOIN badges b ON u.Id = b.UserId\nWHERE b.Date = '2010-07-19 19:39:08';",
+          "correct": false,
+          "pred_ok": true,
+          "error": null
+        },
+        {
+          "sql": "SELECT u.Reputation\nFROM users u\nJOIN badges b ON u.Id = b.UserId\nWHERE b.Date LIKE '2010-07-19 19:39:08%'",
+          "correct": true,
+          "pred_ok": true,
+          "error": null
+        }
+      ],
+      "agent_ok": true,
+      "agent_error": null,
+      "history": [
+        {
+          "node": "generate_sql",
+          "sql": "SELECT u.Reputation\nFROM users u\nJOIN badges b ON u.Id = b.UserId\nWHERE b.Date = '2010-07-19 19:39:08';"
+        },
+        {
+          "node": "verify",
+          "ok": false,
+          "issue": "The query returned zero rows, but the question expects the reputation of users who obtained the badge on that specific date and time. Since no results were returned, it's unclear whether the badge was not awarded on that exact timestamp or if there's a data issue. However, the absence of results means the question cannot be answered, so it's invalid."
+        },
+        {
+          "node": "revise",
+          "sql": "SELECT u.Reputation\nFROM users u\nJOIN badges b ON u.Id = b.UserId\nWHERE b.Date LIKE '2010-07-19 19:39:08%'",
+          "issue": "The query returned zero rows, but the question expects the reputation of users who obtained the badge on that specific date and time. Since no results were returned, it's unclear whether the badge was not awarded on that exact timestamp or if there's a data issue. However, the absence of results means the question cannot be answered, so it's invalid.",
+          "unchanged": false
+        },
+        {
+          "node": "verify",
+          "ok": true,
+          "issue": ""
+        }
+      ]
+    }
+  ]
+}

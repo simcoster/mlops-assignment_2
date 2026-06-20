@@ -19,6 +19,7 @@ import time
 from pathlib import Path
 
 import httpx
+from agent.config import MAX_ITERATIONS
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_EVAL_FILE = ROOT / "evals" / "eval_set.jsonl"
@@ -56,7 +57,6 @@ def matches(gold_rows: list[tuple] | None, pred_rows: list[tuple] | None) -> boo
 
 # ---------- Implement these (Phase 5) ----------------------------------
 
-MAX_ITERATIONS = 3
 AGENT_TIMEOUT = 300.0
 
 
