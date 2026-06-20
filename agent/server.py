@@ -57,13 +57,34 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+def _langfuse_tags(tags: dict[str, str]) -> list[str]:
+    """Build Langfuse trace tags (shown in the Tags filter, not just metadata)."""
+    lf_tags: list[str] = []
+    if run_type := tags.get("run_type"):
+        lf_tags.append(run_type)
+    if run_id := tags.get("run_id"):
+        lf_tags.append(run_id)
+    return lf_tags
+
+
+def _runnable_config(tags: dict[str, str]) -> RunnableConfig:
+    config: RunnableConfig = {
+        "callbacks": [_lf_handler] if _lf_handler is not None else [],
+    }
+    if not tags:
+        return config
+
+    lf_tags = _langfuse_tags(tags)
+    config["metadata"] = {**tags, "langfuse_tags": lf_tags}
+    if lf_tags:
+        config["tags"] = lf_tags
+    return config
+
+
 @app.post("/answer", response_model=AnswerResponse)
 def answer(req: AnswerRequest) -> AnswerResponse:
     state = AgentState(question=req.question, db_id=req.db)
-    config: RunnableConfig  = {
-        "callbacks": [_lf_handler] if _lf_handler is not None else [],
-        "metadata": req.tags,
-    }
+    config = _runnable_config(req.tags)
     try:
         final = graph.invoke(state, config=config)
     except Exception as e:  # noqa: BLE001

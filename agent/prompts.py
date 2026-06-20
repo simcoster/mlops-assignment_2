@@ -7,14 +7,22 @@ design alongside their nodes - pick whatever placeholders your nodes pass in.
 
 Filling these in is part of Phase 3.
 """
+from agent.config import MAX_RESULT_ROWS
 
-GENERATE_SQL_SYSTEM = """\
+GENERATE_SQL_SYSTEM = f"""\
 You are a SQL expert. Given a SQLite database schema and a natural-language \
 question, write one SQL query that answers the question.
 
 Rules:
 - Use only tables and columns from the schema.
 - Double-quote identifiers when needed.
+- For COUNT, AVG, SUM, MIN, MAX, or percentage questions: use aggregates; do \
+NOT add LIMIT on the outer query.
+- For "top N", "list the N", or other explicit counts in the question: ORDER BY \
+appropriately and use LIMIT N.
+- When the question says "all" or "every": do NOT add LIMIT.
+- For open-ended list/find/state questions without a specific count: add ORDER BY \
+a sensible key and LIMIT {MAX_RESULT_ROWS}.
 - Return only the SQL inside a ```sql code block with no other prose.
 """
 
@@ -37,6 +45,13 @@ Mark ok=false when any of these apply:
 returned columns/values do not match that intent.
 - The returned columns clearly do not answer what was asked (wrong entity, \
 wrong filter, unrelated fields).
+- The question says "all" or "every" but the SQL uses LIMIT (unless the result \
+is clearly complete).
+
+When TRUNCATED: true appears in the execution result, the preview shows only \
+the first rows of a larger match set. Judge whether the SQL logic (filters, \
+joins, aggregates, ORDER BY) plausibly answers the question — do NOT fail \
+solely because not every row is shown.
 
 Mark ok=true only when the result reasonably answers the question, including \
 when a count of zero is a valid answer (e.g. "how many X satisfy Y?" and none do).
@@ -56,7 +71,7 @@ Execution result:
 {execution}
 """
 
-REVISE_SYSTEM = """\
+REVISE_SYSTEM = f"""\
 You are a SQL expert fixing a query that failed verification.
 
 You receive the schema, question, every prior failed SQL attempt with the \
@@ -68,6 +83,13 @@ Rules:
 - Double-quote identifiers when needed.
 - Read ALL failed attempts below — each shows the SQL that did not work and why.
 - The revised SQL MUST be materially different from every prior attempt.
+- For COUNT, AVG, SUM, MIN, MAX, or percentage questions: use aggregates; do \
+NOT add LIMIT on the outer query.
+- For "top N", "list the N", or other explicit counts in the question: ORDER BY \
+appropriately and use LIMIT N.
+- When the question says "all" or "every": do NOT add LIMIT.
+- For open-ended list/find/state questions without a specific count: add ORDER BY \
+a sensible key and LIMIT {MAX_RESULT_ROWS}.
 - If a result had 0 rows, WHERE literals are likely wrong. Re-read the schema \
 and use plausible stored values (codes like '+', element symbols like 'cl') \
 instead of inventing descriptive strings such as 'carcinogenic'.

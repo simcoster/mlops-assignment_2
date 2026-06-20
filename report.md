@@ -29,6 +29,9 @@ Read order under load: queue growing → KV usage near 100% → preemptions → 
 | Setting | Value | Justification |
 |---------|-------|---------------|
 | MAX_ITERATIONS | 2 (iteration 1 target) | `eval_baseline.json` shows identical pass rate for `iter_1` and `iter_2` (0.3333), so the 3rd loop adds latency risk without observed quality gain |
+| MAX_RESULT_ROWS | 100 | Hard cap on open-ended list queries at execute time; aggregates and explicit LIMIT exempt; reduces huge fetch/JSON cost under load |
+| generate/revise LIMIT rules | prompt-driven | Aggregates: no LIMIT; explicit N: LIMIT N; "all"/"every": no LIMIT; open-ended lists: ORDER BY + LIMIT 100 |
+| verify truncation | TRUNCATED flag in execution | Verifier judges SQL logic on truncated previews, not full row enumeration |
 | verify → revise loop | conditional edge | Re-executes after failed verification |
 | verify targets | SQL error, 0 rows, wrong columns | Obvious failure modes routed to revise |
 | revise | temp 0.2 + unchanged-SQL retry | Avoid repeating the same failing query at temp 0 |
@@ -48,4 +51,37 @@ Read order under load: queue growing → KV usage near 100% → preemptions → 
 
 - Observation: `results/eval_baseline.json` shows `iter_1` and `iter_2` have identical success rate (`0.3333`).
 - Decision: reduce `MAX_ITERATIONS` from 3 to 2 to lower per-request LLM work and reduce timeout risk.
-- Scope: documentation only in this iteration; code/config changes to follow separately.
+
+**10 RPS load test (run D — MAX_ITERATIONS=2, no row cap):**
+
+| Metric | Value |
+|--------|-------|
+| Achieved RPS | 8.3332 |
+| OK | 916 (30.5%) |
+| Timeouts | 1475 |
+| HTTP errors | 1 |
+| Client errors | 608 |
+| Latency p50 / p95 / p99 | 49.7s / 97.2s / 103.9s |
+
+vs baseline run B (MAX_ITERATIONS=3): OK roughly doubled (452 → 916), timeouts down (1697 → 1475), HTTP errors fixed (246 → 1). Still far from SLA — ~63% of requests fail at 10 RPS.
+
+### Iteration 2 (result row limiting)
+
+- Observation: open-ended list queries (e.g. financial accounts before 1997 with balance > 3000 USD) can return thousands of rows, inflating SQLite fetch, JSON response size, and client timeouts.
+- Decision: three-layer defense — (1) prompt LIMIT rules in generate/revise, (2) execution hard cap via `COUNT(*)` + `LIMIT 100` subquery wrapper for non-aggregate queries without LIMIT, (3) verifier aware of `TRUNCATED` previews.
+- Eval safety: agent stores uncapped SQL in history; eval re-executes `final_sql` without the wrapper.
+
+**10 RPS load test (run E — MAX_ITERATIONS=2 + row cap):**
+
+| Metric | Value | vs run D (iter 1) |
+|--------|-------|-------------------|
+| Achieved RPS | 8.3332 | flat |
+| OK | 1117 (37.2%) | +201 (+22%) |
+| Timeouts | 1276 | −199 (−13%) |
+| HTTP errors | 1 | flat |
+| Client errors | 606 | flat |
+| Latency p50 / p95 / p99 | 81.9s / 117.1s / 119.5s | p50 worse (+32s); p95/p99 slightly worse |
+
+**Interpretation:** row cap improved reliability (more requests finish within the 120s client timeout) but did not improve latency percentiles. Likely causes: (1) `COUNT(*)` subquery adds a full scan on uncapped list queries, (2) agent-side wall time still dominated by 2× generate/verify LLM round-trips per request, not vLLM decode alone. Grafana during run E showed vLLM E2E P95 ~3–4s and P99 ~5s with queue at 0 and ~15–25 req/s at the serving layer — bottleneck is the full agent graph under concurrency, not raw model throughput.
+
+**Next candidates:** replace `COUNT(*)` + `LIMIT` with single `LIMIT N+1` probe; push LIMIT into generated SQL more consistently; reduce LLM calls (rule-based verify for obvious failures).

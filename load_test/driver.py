@@ -5,10 +5,11 @@ agent at the requested RPS for the requested duration, recording per-
 request latency and outcome.
 
 Run:
-    uv run python load_test/driver.py --rps 8 --duration 300
+    uv run python load_test/driver.py --rps 10 --duration 300
+    uv run python load_test/driver.py --rps 10 --duration 300 --run-id iter2-row-cap
 
 Writes a JSON file (default results/load_test.json) with summary + raw
-per-request data.
+per-request data. Each request tags Langfuse traces via POST /answer tags.
 """
 from __future__ import annotations
 
@@ -17,6 +18,7 @@ import asyncio
 import json
 import random
 import time
+import uuid
 from pathlib import Path
 
 import aiohttp
@@ -31,9 +33,14 @@ async def fire_one(
     session: aiohttp.ClientSession,
     url: str,
     question: dict,
+    tags: dict[str, str],
     results: list[dict],
 ) -> None:
-    payload = {"question": question["question"], "db": question["db_id"]}
+    payload = {
+        "question": question["question"],
+        "db": question["db_id"],
+        "tags": tags,
+    }
     t0 = time.monotonic()
     status = "ok"
     err: str | None = None
@@ -65,6 +72,14 @@ async def drive(args: argparse.Namespace) -> None:
     rnd = random.Random(0)
     results: list[dict] = []
     interval = 1.0 / args.rps
+    tags = {
+        "run_type": "load_test",
+        "run_id": args.run_id,
+        "rps": str(args.rps),
+        "duration": str(args.duration),
+    }
+
+    print(f"Langfuse run_id: {args.run_id}")
 
     connector = aiohttp.TCPConnector(limit=0)
     async with aiohttp.ClientSession(connector=connector) as session:
@@ -74,7 +89,9 @@ async def drive(args: argparse.Namespace) -> None:
         next_fire = start
         while time.monotonic() < deadline:
             q = rnd.choice(questions)
-            tasks.append(asyncio.create_task(fire_one(session, args.agent_url, q, results)))
+            tasks.append(asyncio.create_task(
+                fire_one(session, args.agent_url, q, tags, results),
+            ))
             next_fire += interval
             sleep_for = next_fire - time.monotonic()
             if sleep_for > 0:
@@ -93,6 +110,7 @@ async def drive(args: argparse.Namespace) -> None:
         return latencies[k]
 
     summary = {
+        "run_id": args.run_id,
         "requested_rps": args.rps,
         "duration_seconds": args.duration,
         "wall_clock_seconds": wall,
@@ -120,7 +138,14 @@ def main() -> None:
     p.add_argument("--duration", type=int, default=300, help="seconds to drive load")
     p.add_argument("--agent-url", default=AGENT_URL_DEFAULT)
     p.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    p.add_argument(
+        "--run-id",
+        default="",
+        help="Langfuse metadata run id (default: random uuid)",
+    )
     args = p.parse_args()
+    if not args.run_id:
+        args.run_id = str(uuid.uuid4())
     asyncio.run(drive(args))
 
 
