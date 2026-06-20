@@ -24,9 +24,10 @@ from typing import Any
 
 from langchain_openai import ChatOpenAI
 from langgraph.graph import END, START, StateGraph
+from pydantic import SecretStr
 
 from agent import prompts
-from agent.config import MAX_ITERATIONS
+from agent.config import MAX_ITERATIONS, MAX_VERIFY_ISSUE_CHARS, MAX_VERIFY_TOKENS
 from agent.execution import ExecutionResult, execute_sql
 from agent.schema import render_schema
 
@@ -57,17 +58,85 @@ def llm() -> ChatOpenAI:
     return ChatOpenAI(
         model=VLLM_MODEL,
         base_url=VLLM_BASE_URL,
-        api_key=LLM_API_KEY,
+        api_key=SecretStr(LLM_API_KEY),
         temperature=0.0,
     )
 
 
+def verify_llm():
+    """Bounded verifier client — short JSON only."""
+    return llm().bind(max_tokens=MAX_VERIFY_TOKENS)
+
+
+_COUNT_QUESTION = re.compile(
+    r"\b(how many|number of|count of|total number|what is the count)\b",
+    re.IGNORECASE,
+)
+
+
+def _question_expects_count(question: str) -> bool:
+    return bool(_COUNT_QUESTION.search(question))
+
+
+def _truncate_issue(issue: str) -> str:
+    issue = issue.strip()
+    if len(issue) <= MAX_VERIFY_ISSUE_CHARS:
+        return issue
+    return issue[: MAX_VERIFY_ISSUE_CHARS - 3] + "..."
+
+
+def _rule_based_verify(
+    question: str,
+    execution: ExecutionResult | None,
+) -> tuple[bool, str] | None:
+    """Return a verify decision without LLM, or None to defer to LLM verify."""
+    if execution is None:
+        return False, "no execution result"
+    if execution.row_count == 0:
+        if _question_expects_count(question):
+            return True, ""
+        return False, "0 rows returned; check filters, joins, or literal values"
+    return None
+
+
+def _verify_result(
+    verify_ok: bool,
+    verify_issue: str,
+    *,
+    mode: str,
+) -> dict:
+    verify_issue = _truncate_issue(verify_issue)
+    return {
+        "verify_ok": verify_ok,
+        "verify_issue": verify_issue,
+        "history_entry": {
+            "node": "verify",
+            "ok": verify_ok,
+            "issue": verify_issue,
+            "mode": mode,
+        },
+    }
 
 # ---- Nodes ------------------------------------------------------------
 
 def _attach_schema(state: AgentState) -> dict:
     """Provided. Render the DB schema once at the start of the run."""
     return {"schema": render_schema(state.db_id)}
+
+
+def _message_text(content: str | list[str | dict[str, Any]]) -> str:
+    """Normalize AIMessage.content to plain text (str or multimodal blocks)."""
+    if isinstance(content, str):
+        return content
+    parts: list[str] = []
+    for block in content:
+        if isinstance(block, str):
+            parts.append(block)
+        elif isinstance(block, dict):
+            text = block.get("text")
+            if isinstance(text, str):
+                parts.append(text)
+    return "\n".join(parts)
 
 
 def _extract_sql(text: str) -> str:
@@ -134,7 +203,7 @@ def _parse_verify_response(text: str) -> tuple[bool, str]:
             return False, f"Verifier returned unparseable output: {stripped[:200]}"
 
     ok = bool(data.get("ok", False))
-    issue = str(data.get("issue", "") or "")
+    issue = _truncate_issue(str(data.get("issue", "") or ""))
     return ok, issue
 
 
@@ -155,7 +224,7 @@ def generate_sql_node(state: AgentState) -> dict:
             question=state.question,
         )),
     ])
-    sql = _extract_sql(response.content)
+    sql = _extract_sql(_message_text(response.content))
     return {
         "sql": sql,
         "iteration": state.iteration + 1,
@@ -171,20 +240,22 @@ def execute_node(state: AgentState) -> dict:
 def verify_node(state: AgentState) -> dict:
     """Decide whether state.execution plausibly answers state.question.
 
-    Follow the generate_sql_node pattern: build messages from the VERIFY_*
-    prompts, call llm(), parse the reply. Ask the model for a small JSON object
-    like {"ok": bool, "issue": str} and parse it defensively - the model may
-    wrap it in prose or fences. state.execution.render() gives you a compact
-    view of the rows or error to feed into the prompt.
-
-    Return: {"verify_ok": <bool>, "verify_issue": <str>}.
-    What counts as "not plausible" is yours to define - see the Phase 3 targets
-    in the README.
+    Rule-based fast path for SQL errors and 0-row results; LLM verify only
+    for ambiguous non-empty results. Verifier output is token- and length-capped.
     """
     execution = state.execution
-    execution_text = execution.render() if execution is not None else "ERROR: no execution result"
+    ruled = _rule_based_verify(state.question, execution)
+    if ruled is not None:
+        verify_ok, verify_issue = ruled
+        result = _verify_result(verify_ok, verify_issue, mode="rules")
+        return {
+            "verify_ok": result["verify_ok"],
+            "verify_issue": result["verify_issue"],
+            "history": state.history + [result["history_entry"]],
+        }
 
-    response = llm().invoke([
+    execution_text = execution.render() if execution is not None else "ERROR: no execution result"
+    response = verify_llm().invoke([
         ("system", prompts.VERIFY_SYSTEM),
         ("user", prompts.VERIFY_USER.format(
             question=state.question,
@@ -192,15 +263,12 @@ def verify_node(state: AgentState) -> dict:
             execution=execution_text,
         )),
     ])
-    verify_ok, verify_issue = _parse_verify_response(response.content)
+    verify_ok, verify_issue = _parse_verify_response(_message_text(response.content))
+    result = _verify_result(verify_ok, verify_issue, mode="llm")
     return {
-        "verify_ok": verify_ok,
-        "verify_issue": verify_issue,
-        "history": state.history + [{
-            "node": "verify",
-            "ok": verify_ok,
-            "issue": verify_issue,
-        }],
+        "verify_ok": result["verify_ok"],
+        "verify_issue": result["verify_issue"],
+        "history": state.history + [result["history_entry"]],
     }
 
 
@@ -231,20 +299,21 @@ def revise_node(state: AgentState) -> dict:
 
     model = llm()
     response = model.invoke(messages)
-    sql = _extract_sql(response.content)
+    reply = _message_text(response.content)
+    sql = _extract_sql(reply)
 
     def _repeats_prior_attempt(candidate: str) -> bool:
         norm = _normalize_sql(candidate)
         return any(norm == _normalize_sql(prior) for prior in prior_sqls)
 
     if _repeats_prior_attempt(sql):
-        messages.append(("assistant", response.content))
+        messages.append(("assistant", reply))
         messages.append(("user", prompts.REVISE_RETRY_USER.format(
             revision_history=revision_history,
             sql=sql,
         )))
         response = model.invoke(messages)
-        sql = _extract_sql(response.content)
+        sql = _extract_sql(_message_text(response.content))
 
     return {
         "sql": sql,

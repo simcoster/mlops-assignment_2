@@ -39,7 +39,26 @@ Read order under load: queue growing → KV usage near 100% → preemptions → 
 | revise | temp 0.2 + unchanged-SQL retry | Avoid repeating the same failing query at temp 0 |
 | thinking | disabled at vLLM server | Agent needs short SQL/JSON, not reasoning tokens |
 
-## Phase 4 — SLA iteration log
+## Phase 5 — Eval results
+
+Execution accuracy on `evals/eval_set.jsonl` (30 questions): compare agent SQL result rows to gold SQL, canonicalized.
+
+| Metric | Baseline (`results/eval_baseline.json`) | After tuning (`results/eval_after_tuning.json`) |
+|--------|----------------------------------------|-----------------------------------------------|
+| Overall pass rate | **33.3%** (10/30) | **30.0%** (9/30) |
+| iter_0 pass rate | 26.7% | **30.0%** |
+| iter_1 pass rate | 33.3% | 30.0% |
+| iter_2 pass rate | 33.3% | — (cap at 2 iterations) |
+| Avg iterations | 1.43 | 1.30 |
+| Eval wall time | 48.8s | 25.6s |
+
+**Commentary:** Overall accuracy held roughly flat (−1 question). **iter_0 improved +3.3pp** (26.7% → 30.0%), meaning more questions were answered correctly on the first SQL attempt without needing revise. That aligns with generate-side changes: LIMIT rules in `GENERATE_SQL_*` prompts nudge the model toward tighter, better-shaped queries on the first shot. Rule-based verify and row caps are not scored at iter_0 (eval re-executes raw SQL without the execution wrapper), but they **do** explain the lower avg iterations and faster eval run — less verifier rambling, faster 0-row failure signals, and bounded execution previews feeding revise.
+
+The single-question drop in final pass rate is likely revise-path tradeoffs: `MAX_ITERATIONS=2` removes a third attempt that occasionally helped in baseline, and row-cap / LIMIT-in-SQL can mismatch gold on “list all” questions where gold returns the full row set. Net: tuning optimized for **latency and first-shot reliability**, not eval accuracy — which is acceptable given the SLO-first goal.
+
+**Agent loop value:** Baseline showed the revise loop mattered — iter_0 (26.7%) → iter_1 (33.3%), a +6.7pp lift from one revision cycle. After tuning, iter_0 (30.0%) already captures part of that gain on first try; iter_1 stays at 30.0% with no further carry-forward because `MAX_ITERATIONS=2` and the loop rarely adds a second correcting step on this eval set. The loop still helps on individual traces (verify→revise in Langfuse); the per-iteration rates show **diminishing returns after the first revision**, which justified capping iterations for SLA.
+
+## Phase 6 — SLO iteration log
 
 ### Baseline stress test (before new tuning)
 
