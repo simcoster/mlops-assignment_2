@@ -142,3 +142,19 @@ vs baseline run B (MAX_ITERATIONS=3): OK roughly doubled (452 → 916), timeouts
 | 4 | Deploy iter3 on fresh stack | Full 5-min load test stable: **99.8% OK, p95 6.2s** |
 
 **Diagnosis arc:** Baseline failure was compute saturation from too many LLM calls per agent run (generate + verify + revise), amplified by unbounded result sets and an unbounded verify prompt. Each iteration removed work or bounded cost; rule-based verify was the change that unlocked sustained 10 RPS for the full window.
+
+Grafana evidence: `screenshots/grafana_before.png` (pre-tuning 10 RPS, vLLM E2E P99 ~8s) vs `screenshots/grafana_after.png` (post-tuning run I, P99 ~5s, stable under load).
+
+## Phase 7 — Wrap-up
+
+### Agent value
+
+The verify→revise loop improves quality on questions the generator gets wrong on the first attempt. Baseline eval shows **iter_0 26.7% → iter_1 33.3%** (+6.7pp from one revision). After tuning, **iter_0 rises to 30.0%** (better first-shot SQL from LIMIT rules and tighter prompts), so the loop adds less on aggregate but still rescues individual failures visible in Langfuse (`screenshots/langfuse_trace.png`). Capping at `MAX_ITERATIONS=2` was justified because **iter_1 and iter_2 were identical at 33.3%** in the baseline run — a third loop added latency without accuracy gain.
+
+### What I'd do with more time
+
+1. **Richer schema context for generate/revise.** Extend `render_schema()` to attach, per column: distinct-value count, and up to **5 sample values** when count ≤ 5 (full enum for low-cardinality filter columns). For higher-cardinality columns, show count only. Many failures are wrong WHERE literals (e.g. `'carcinogenic'` vs `'+'` in toxicology) — the model guesses because CREATE TABLE text doesn't show stored values.
+
+2. **Meta-queries on revise (2nd iteration only).** If enriched schema isn't enough, let the revise node run lightweight exploratory SQL (e.g. `SELECT DISTINCT label FROM molecule LIMIT 10`) before rewriting — only on the **second** revision attempt, where accuracy matters most and latency is already spent. Keeps the happy path fast while giving the slow path real data.
+
+3. **Concurrency cap for benchmarks.** The load driver fires at 10 RPS with unlimited in-flight requests, which caused metastable timeout spirals unrelated to per-request tuning. Add a max-in-flight limit on `load_test/driver.py` and/or a small queue on the agent so 300s runs measure **sustainable** throughput rather than unbounded pile-up.
